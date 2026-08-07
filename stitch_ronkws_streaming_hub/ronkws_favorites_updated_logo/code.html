@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en" style=""><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>RonkWS - Favorites</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "secondary-fixed": "#f0dbff",
+                        "primary-fixed": "#eaddff",
+                        "primary-container": "#7c3aed",
+                        "on-error-container": "#ffdad6",
+                        "error": "#ffb4ab",
+                        "surface-container-high": "#2b2835",
+                        "surface": "#181622",
+                        "on-surface": "#e6e0f0",
+                        "surface-dim": "#14121d",
+                        "text-primary": "#FFFFFF",
+                        "on-surface-variant": "#ccc3d8",
+                        "on-secondary-fixed-variant": "#6900b3",
+                        "on-secondary": "#490080",
+                        "on-tertiary": "#490081",
+                        "secondary-container": "#6f00be",
+                        "outline-variant": "#4a4455",
+                        "on-primary-fixed-variant": "#5a00c6",
+                        "on-primary-container": "#ede0ff",
+                        "secondary": "#ddb7ff",
+                        "on-primary": "#3f008e",
+                        "on-background": "#e6e0f0",
+                        "tertiary-container": "#844abe",
+                        "on-tertiary-fixed": "#2c0051",
+                        "on-secondary-container": "#d6a9ff",
+                        "secondary-fixed-dim": "#ddb7ff",
+                        "on-primary-fixed": "#25005a",
+                        "surface-container-low": "#1c1a26",
+                        "primary-fixed-dim": "#d2bbff",
+                        "text-secondary": "#B3B3C6",
+                        "tertiary-fixed": "#f0dbff",
+                        "error-container": "#93000a",
+                        "surface-container-highest": "#363340",
+                        "inverse-on-surface": "#312f3b",
+                        "surface-variant": "#363340",
+                        "surface-container-lowest": "#0f0d18",
+                        "on-tertiary-fixed-variant": "#62259b",
+                        "inverse-surface": "#e6e0f0",
+                        "outline": "#958da1",
+                        "tertiary-fixed-dim": "#ddb8ff",
+                        "primary": "#d2bbff",
+                        "tertiary": "#ddb8ff",
+                        "surface-tint": "#d2bbff",
+                        "on-secondary-fixed": "#2c0051",
+                        "surface-container": "#201e2a",
+                        "surface-bright": "#3a3744",
+                        "on-tertiary-container": "#f2e0ff",
+                        "glow-purple": "rgba(124, 58, 237, 0.4)",
+                        "background": "#14121d",
+                        "on-error": "#690005",
+                        "inverse-primary": "#732ee4"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "stack-sm": "4px",
+                        "base": "8px",
+                        "margin-mobile": "20px",
+                        "margin-desktop": "48px",
+                        "gutter": "16px",
+                        "stack-md": "12px",
+                        "stack-lg": "24px"
+                    },
+                    fontFamily: {
+                        "headline-lg": ["Inter"],
+                        "title-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-lg-mobile": ["Inter"]
+                    },
+                    fontSize: {
+                        "headline-lg": ["32px", { lineHeight: "40px", letterSpacing: "-0.01em", fontWeight: "700" }],
+                        "title-md": ["20px", { lineHeight: "28px", fontWeight: "600" }],
+                        "label-md": ["12px", { lineHeight: "16px", letterSpacing: "0.05em", fontWeight: "600" }],
+                        "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+                        "display-lg": ["40px", { lineHeight: "48px", letterSpacing: "-0.02em", fontWeight: "800" }],
+                        "body-sm": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+                        "headline-lg-mobile": ["28px", { lineHeight: "36px", fontWeight: "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-card {
+            background-color: rgba(24, 22, 34, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        
+        .hero-underglow {
+            background: radial-gradient(circle at 50% 100%, rgba(124, 58, 237, 0.15), transparent 60%);
+        }
+        
+        .vignette-overlay {
+            background: linear-gradient(to top, #14121d 0%, transparent 100%);
+        }
+        
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Hide scrollbar for horizontal scrolling elements */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background font-body-lg min-h-screen pb-24">
+<!-- TopAppBar -->
+<header class="bg-background/80 backdrop-blur-xl text-primary font-title-md text-title-md fixed top-0 w-full z-50 border-b border-white/10 shadow-none flex items-center justify-between px-margin-mobile h-16 md:hidden">
+<button class="hover:opacity-80 transition-opacity active:scale-95 transition-transform flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<div class="h-8 w-8 overflow-hidden flex items-center justify-center rounded"><img alt="RonkWS Icon" class="h-8 w-auto max-w-none" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB-_kBrIdpIdh8DWOhbCiXtOvhB3QYqFHvvwAR2UjeBpjH_LOtqo4e1-MKhFg40L5cpL44ZbjKEC5ci0T9b-tVJt6tFQ1g11x3ZRSW48b9fD2R6ZfNy86UvwgXnq6VimN5xBMsDYRxMBSCDvYUTuNhQATbwR7ejUPj9bxkW4yQ_VOHOtNlfu_OCXZnWthFo4uw3uePPO7AybTJIrA3Whzt0pJ4ujQRVa0pmXzYErGXx-iau70UH8CHbY4aOB-wCv46ktQ" style="object-fit: contain;"/></div>
+<button class="hover:opacity-80 transition-opacity active:scale-95 transition-transform flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+</header>
+<!-- Desktop Nav (Hidden on Mobile) -->
+<header class="hidden md:flex bg-background/80 backdrop-blur-xl text-primary font-title-md text-title-md fixed top-0 w-full z-50 shadow-none items-center justify-between px-margin-desktop h-20">
+<div class="flex items-center gap-8">
+<div class="h-10 w-10 overflow-hidden flex items-center justify-center rounded"><img alt="RonkWS Icon" class="h-10 w-auto max-w-none" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCaz40dLkXdr8xT74DtVcWi-oUgW3znRoTrmCfvEkDodsTnJyOfmaA-EOqDjTT2b2hSxDo5nxmApVzf1NLpAidVlXdlbwdY3dSwilj3bznoDr0J4w__1Nr2D5tTkNHznqzfpQtokVNsFkF_3GsAp1p9wctFsvRPCRm9RkRUN4_S4TUe1WzeiW42WNsNQiQASrUitasb7Xw3SA7iGeue5yMdmNwgqT3MiwZxhR-sKOKiDDIkXN0M-WL97NYlIQSlZQrMJQ" style="object-fit: contain;"/></div>
+<nav class="flex gap-6">
+<a class="text-on-surface-variant hover:text-primary transition-colors flex items-center gap-2 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-[18px]">home</span> Home
+                 </a>
+<a class="text-on-surface-variant hover:text-primary transition-colors flex items-center gap-2 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-[18px]">trending_up</span> Trending
+                 </a>
+<a class="text-primary flex items-center gap-2 font-label-md text-label-md bg-primary-container/20 px-4 py-2 rounded-full shadow-[0px_0px_16px_rgba(124,58,237,0.3)]" href="#">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">star</span> Favorites
+                 </a>
+<a class="text-on-surface-variant hover:text-primary transition-colors flex items-center gap-2 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-[18px]">search</span> Search
+                 </a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="hover:opacity-80 transition-opacity active:scale-95 transition-transform flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="hover:opacity-80 transition-opacity active:scale-95 transition-transform flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined">person</span>
+</button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="pt-24 md:pt-32 px-margin-mobile md:px-margin-desktop max-w-[1440px] mx-auto hero-underglow">
+<!-- Header Section -->
+<section class="mb-stack-lg flex justify-between items-end">
+<div>
+<h1 class="font-display-lg text-display-lg text-text-primary mb-stack-sm md:hidden">My Favorites</h1>
+<h1 class="font-display-lg text-display-lg text-text-primary mb-stack-sm hidden md:block">My Favorites</h1>
+<p class="text-text-secondary font-body-sm text-body-sm">Manage your saved services and platforms.</p>
+</div>
+<div class="hidden md:flex gap-4">
+<button class="glass-card hover:bg-surface-bright transition-colors px-4 py-2 rounded-lg flex items-center gap-2 text-text-primary font-label-md text-label-md">
+<span class="material-symbols-outlined text-[18px]">filter_list</span> Filter
+                </button>
+<button class="glass-card hover:bg-surface-bright transition-colors px-4 py-2 rounded-lg flex items-center gap-2 text-text-primary font-label-md text-label-md">
+<span class="material-symbols-outlined text-[18px]">sort</span> Sort
+                </button>
+</div>
+</section>
+<!-- Search/Filter Bar (Mobile Focus) -->
+<div class="md:hidden glass-card rounded-full flex items-center px-4 py-2 mb-stack-lg shadow-[0_4px_12px_rgba(0,0,0,0.2)]">
+<span class="material-symbols-outlined text-text-secondary mr-2">search</span>
+<input class="bg-transparent border-none text-text-primary font-body-sm focus:ring-0 w-full placeholder-text-secondary" placeholder="Search favorites..." type="text"/>
+<button class="text-primary ml-2">
+<span class="material-symbols-outlined">tune</span>
+</button>
+</div>
+<!-- Bento Grid / Glassmorphic Cards Content -->
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-gutter pb-stack-lg">
+<!-- Card 1 -->
+<article class="glass-card rounded-xl overflow-hidden group relative hover:shadow-[0px_8px_32px_rgba(124,58,237,0.2)] transition-all duration-300 transform hover:-translate-y-1">
+<div class="h-40 w-full relative">
+<div class="bg-cover bg-center w-full h-full" data-alt="A cinematic, ultra-high-definition still of a futuristic neon city skyline at night, captured in a premium streaming context. Dark mode aesthetic, vibrant purple and cyan highlights reflecting off sleek glass skyscrapers. High visual fidelity, sleek and immersive, suitable for a streaming service header." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDMQSno5t-iTdXpStRXqid89vqauJiPPs4BWXvkOb-MappJjFfOhxnilQgw9YGe5Gpg-GSaO8RcUraLX72jCqCRmtfS7y2NBiYbCTpC2mDwU_uw5dFUPsMGz3QmvIVZUUPw57ajhHxRoiaFZmASzHKYjCfMh1XbXRiYqCONB4wjWRn4gIMU1RZOz0gDCzOOyRq8G4pMYqIlfDLVLMPTH0Xk1Ekz5dJfW7f8XYSJQeiwQ62JIA0M12cF')"></div>
+<div class="absolute inset-0 vignette-overlay"></div>
+<!-- Platform Logo / Icon -->
+<div class="absolute top-4 left-4 bg-surface/90 backdrop-blur-md rounded-full p-2 border border-white/10 shadow-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">movie</span>
+</div>
+<!-- Remove Button overlay -->
+<button class="absolute top-4 right-4 bg-surface/50 backdrop-blur-md hover:bg-error/20 hover:text-error transition-colors rounded-full p-2 text-on-surface-variant flex items-center justify-center opacity-0 group-hover:opacity-100 duration-200">
+<span class="material-symbols-outlined text-[20px]">heart_broken</span>
+</button>
+</div>
+<div class="p-4 relative">
+<h3 class="font-title-md text-title-md text-text-primary mb-1 truncate">Neo-Tokyo Chronicles</h3>
+<p class="font-body-sm text-body-sm text-text-secondary mb-3 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">calendar_today</span> Added 2 days ago
+                    </p>
+<div class="flex justify-between items-center mt-stack-md pt-stack-sm border-t border-white/5">
+<span class="font-label-md text-label-md text-primary-fixed-dim bg-primary-container/20 px-2 py-1 rounded">Sci-Fi</span>
+<button class="text-primary hover:text-primary-fixed transition-colors flex items-center gap-1 font-label-md text-label-md">
+                            Open <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Card 2 -->
+<article class="glass-card rounded-xl overflow-hidden group relative hover:shadow-[0px_8px_32px_rgba(124,58,237,0.2)] transition-all duration-300 transform hover:-translate-y-1">
+<div class="h-40 w-full relative">
+<div class="bg-cover bg-center w-full h-full" data-alt="A wide shot of an epic fantasy landscape. Soaring ancient stone castles perched on misty mountains during a dramatic sunset. Rich, deep cinematic colors, premium dark mode styling, hinting at high-budget epic fantasy streaming content. Soft, sophisticated lighting." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAMPdi8fzBHyDlbFLO-zmYTdLcKoY8ct8dBUZiwKaKKSFF3zzVl8eeGBkBZ3514TJhqLX7H3dML0Rpk80JiLyvJ7-bD8dq5drcoT035TVtIJMpObmCBJ91JUtIV4-53nUgoES3TRr-qgcm9mv_jUe-cu61Bjve765niI48c1hoktqkm1AcJhYAlbfAByhJs1f7L1E6owF7D3XXkpJKRZsgut2AHNkFCH8WLbSfyIqXhxPql0Hezgsab')"></div>
+<div class="absolute inset-0 vignette-overlay"></div>
+<div class="absolute top-4 left-4 bg-surface/90 backdrop-blur-md rounded-full p-2 border border-white/10 shadow-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary-fixed-dim" style="font-variation-settings: 'FILL' 1;">live_tv</span>
+</div>
+<button class="absolute top-4 right-4 bg-surface/50 backdrop-blur-md hover:bg-error/20 hover:text-error transition-colors rounded-full p-2 text-on-surface-variant flex items-center justify-center opacity-0 group-hover:opacity-100 duration-200">
+<span class="material-symbols-outlined text-[20px]">heart_broken</span>
+</button>
+</div>
+<div class="p-4 relative">
+<h3 class="font-title-md text-title-md text-text-primary mb-1 truncate">Realm of the Forgotten</h3>
+<p class="font-body-sm text-body-sm text-text-secondary mb-3 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">calendar_today</span> Added 1 week ago
+                    </p>
+<div class="flex justify-between items-center mt-stack-md pt-stack-sm border-t border-white/5">
+<span class="font-label-md text-label-md text-tertiary-fixed-dim bg-tertiary-container/20 px-2 py-1 rounded">Fantasy</span>
+<button class="text-primary hover:text-primary-fixed transition-colors flex items-center gap-1 font-label-md text-label-md">
+                            Open <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Card 3 -->
+<article class="glass-card rounded-xl overflow-hidden group relative hover:shadow-[0px_8px_32px_rgba(124,58,237,0.2)] transition-all duration-300 transform hover:-translate-y-1">
+<div class="h-40 w-full relative">
+<div class="bg-cover bg-center w-full h-full" data-alt="A close-up, high contrast shot of a classic vintage microphone in a dark, moody jazz club setting. Smoke lingering in the air, warm amber and deep purple spotlights. Evokes premium audio or stand-up comedy specials in a sophisticated streaming interface." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBJWikn-Rze79ZP7JQel5fjqPz1iG3AZIkhXBFiuOnruiCJX14niFBBY8kn1DJrl4pvj8rOXKnPu1qeM7FKnx7L6JqbG4uB1qBaxoBM1jzX1PGTISV7T2dG5mFvmGz9OgvsCVH-8N4E0KFQK96G2H3KPI9RwDEz9bo0-a7ouUWha4b2wgOljDSVe5jFlsljLHFCBGLkc04wFxIseE1XVs_yLlMsifXGKhwLoYNTnOwkBzljnm4fKRDS')"></div>
+<div class="absolute inset-0 vignette-overlay"></div>
+<div class="absolute top-4 left-4 bg-surface/90 backdrop-blur-md rounded-full p-2 border border-white/10 shadow-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary-fixed-dim" style="font-variation-settings: 'FILL' 1;">mic</span>
+</div>
+<button class="absolute top-4 right-4 bg-surface/50 backdrop-blur-md hover:bg-error/20 hover:text-error transition-colors rounded-full p-2 text-on-surface-variant flex items-center justify-center opacity-0 group-hover:opacity-100 duration-200">
+<span class="material-symbols-outlined text-[20px]">heart_broken</span>
+</button>
+</div>
+<div class="p-4 relative">
+<h3 class="font-title-md text-title-md text-text-primary mb-1 truncate">Midnight Sessions</h3>
+<p class="font-body-sm text-body-sm text-text-secondary mb-3 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">calendar_today</span> Added 2 weeks ago
+                    </p>
+<div class="flex justify-between items-center mt-stack-md pt-stack-sm border-t border-white/5">
+<span class="font-label-md text-label-md text-secondary-fixed-dim bg-secondary-container/20 px-2 py-1 rounded">Comedy</span>
+<button class="text-primary hover:text-primary-fixed transition-colors flex items-center gap-1 font-label-md text-label-md">
+                            Open <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Example Empty State (Currently Hidden via Tailwind class 'hidden'. Remove 'hidden' to test) -->
+<div class="hidden col-span-1 md:col-span-2 lg:col-span-3 xl:col-span-4 flex flex-col items-center justify-center py-20 px-4 text-center">
+<div class="w-32 h-32 mb-6 rounded-full bg-surface-container-highest/50 border border-white/10 flex items-center justify-center shadow-[0_0_40px_rgba(124,58,237,0.1)]">
+<span class="material-symbols-outlined text-6xl text-on-surface-variant opacity-50">heart_broken</span>
+</div>
+<h3 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-text-primary mb-2">No Favorites Yet</h3>
+<p class="font-body-lg text-body-lg text-text-secondary max-w-md mb-8">You haven't saved any platforms or shows to your favorites. Explore trending content and start building your collection.</p>
+<button class="bg-primary-container hover:bg-primary transition-colors text-text-primary font-title-md text-title-md px-8 py-3 rounded-full shadow-[0px_8px_24px_rgba(124,58,237,0.4)]">
+                    Explore Trending
+                </button>
+</div>
+</section>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden bg-surface/80 backdrop-blur-md text-primary font-label-md text-label-md fixed bottom-0 w-full z-50 rounded-t-xl border-t border-white/15 shadow-[0px_-8px_24px_rgba(124,58,237,0.2)] flex justify-around items-center px-4 py-2 pb-safe">
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90 transition-all duration-200 py-1 px-3">
+<span class="material-symbols-outlined mb-1">home</span>
+<span class="">Home</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90 transition-all duration-200 py-1 px-3">
+<span class="material-symbols-outlined mb-1">trending_up</span>
+<span class="">Trending</span>
+</button>
+<!-- Active State applied here -->
+<button class="flex flex-col items-center justify-center text-primary bg-primary-container/20 rounded-xl px-3 py-1 active:scale-90 transition-all duration-200 shadow-[0px_4px_12px_rgba(124,58,237,0.15)]">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="">Favorites</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90 transition-all duration-200 py-1 px-3">
+<span class="material-symbols-outlined mb-1">search</span>
+<span class="">Search</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90 transition-all duration-200 py-1 px-3">
+<span class="material-symbols-outlined mb-1">person</span>
+<span class="">Profile</span>
+</button>
+</nav>
+</body></html>

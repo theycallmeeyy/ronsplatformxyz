@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>RonkWS - Sign In</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error-container": "#93000a",
+                        "inverse-surface": "#e6e0f0",
+                        "tertiary-fixed-dim": "#ddb8ff",
+                        "error": "#ffb4ab",
+                        "glow-purple": "rgba(124, 58, 237, 0.4)",
+                        "surface-container": "#201e2a",
+                        "on-secondary": "#490080",
+                        "secondary-container": "#6f00be",
+                        "surface-dim": "#14121d",
+                        "on-background": "#e6e0f0",
+                        "on-primary-container": "#ede0ff",
+                        "tertiary-fixed": "#f0dbff",
+                        "primary": "#d2bbff",
+                        "on-tertiary-fixed-variant": "#62259b",
+                        "primary-fixed-dim": "#d2bbff",
+                        "text-primary": "#FFFFFF",
+                        "on-primary-fixed-variant": "#5a00c6",
+                        "secondary-fixed": "#f0dbff",
+                        "surface-container-high": "#2b2835",
+                        "on-tertiary-fixed": "#2c0051",
+                        "on-error-container": "#ffdad6",
+                        "primary-fixed": "#eaddff",
+                        "on-tertiary-container": "#f2e0ff",
+                        "text-secondary": "#B3B3C6",
+                        "on-secondary-fixed-variant": "#6900b3",
+                        "tertiary": "#ddb8ff",
+                        "on-error": "#690005",
+                        "on-secondary-container": "#d6a9ff",
+                        "on-surface-variant": "#ccc3d8",
+                        "surface-container-lowest": "#0f0d18",
+                        "surface-container-highest": "#363340",
+                        "inverse-on-surface": "#312f3b",
+                        "surface-tint": "#d2bbff",
+                        "surface-bright": "#3a3744",
+                        "tertiary-container": "#844abe",
+                        "on-tertiary": "#490081",
+                        "surface-container-low": "#1c1a26",
+                        "secondary-fixed-dim": "#ddb7ff",
+                        "primary-container": "#7c3aed",
+                        "on-surface": "#e6e0f0",
+                        "inverse-primary": "#732ee4",
+                        "secondary": "#ddb7ff",
+                        "on-primary-fixed": "#25005a",
+                        "surface-variant": "#363340",
+                        "outline": "#958da1",
+                        "surface": "#181622",
+                        "outline-variant": "#4a4455",
+                        "on-secondary-fixed": "#2c0051",
+                        "on-primary": "#3f008e",
+                        "background": "#14121d"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "base": "8px",
+                        "margin-desktop": "48px",
+                        "stack-sm": "4px",
+                        "margin-mobile": "20px",
+                        "stack-lg": "24px",
+                        "stack-md": "12px",
+                        "gutter": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "title-md": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "700" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "display-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "800" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "title-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glow-bg-1 {
+            position: absolute;
+            top: -10%;
+            left: -10%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(124, 58, 237, 0.2) 0%, rgba(20, 18, 29, 0) 70%);
+            border-radius: 50%;
+            animation: pulse 8s infinite alternate ease-in-out;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .glow-bg-2 {
+            position: absolute;
+            bottom: -10%;
+            right: -10%;
+            width: 60vw;
+            height: 60vw;
+            background: radial-gradient(circle, rgba(111, 0, 190, 0.15) 0%, rgba(20, 18, 29, 0) 70%);
+            border-radius: 50%;
+            animation: pulse 12s infinite alternate-reverse ease-in-out;
+            pointer-events: none;
+            z-index: 0;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1) translate(0, 0); opacity: 0.5; }
+            100% { transform: scale(1.2) translate(5%, 5%); opacity: 1; }
+        }
+        
+        .input-glass {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        .input-glass:focus-within {
+            background-color: rgba(255, 255, 255, 0.08);
+            border-color: rgba(124, 58, 237, 0.5);
+            box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.15);
+        }
+    </style>
+</head>
+<body class="bg-background text-text-primary min-h-screen flex items-center justify-center relative overflow-hidden font-body-lg selection:bg-primary-container selection:text-white">
+<!-- Atmospheric Animated Background -->
+<div class="glow-bg-1"></div>
+<div class="glow-bg-2"></div>
+<!-- Main Content Canvas -->
+<main class="w-full max-w-md px-margin-mobile z-10 relative">
+<!-- Glassmorphic Login Card -->
+<div class="bg-surface/80 backdrop-blur-xl border border-white/10 rounded-[24px] p-stack-lg shadow-[0px_8px_32px_rgba(124,58,237,0.15)] flex flex-col items-center w-full">
+<!-- Logo area -->
+<div class="mb-stack-lg flex justify-center w-full">
+<div class="h-20 w-20 bg-primary-container rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(124,58,237,0.4)]"><img alt="RonkWS Logo" class="w-full h-full object-contain p-2" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjg310hTc_6UwHDuIeZlxrAlE3cWAAOv8bBfVzZmcVZmQVBRA2fkkH0kG33Q6N6ZE94La0ta8gCRc1yBHdsCN7-G1S1Ck0MO0_sKmFEnELBMtRDyED4W-2NsEkiyB_Sso2B8WMQSnQz9M9iVI0icE7Mfbu-gVYjTh-2eXOYxQvPDQDW5TGDzf7AV_5K3gU28xgDkXykRRMgx1g02PMaNyvK278bU2i2cbMzdO6MLblcDOISsaI_kyFUkf_BhCxkicT_A"/></div>
+</div>
+<!-- Headers -->
+<div class="text-center mb-stack-lg w-full">
+<h1 class="font-headline-lg text-headline-lg text-text-primary mb-stack-sm md:font-headline-lg md:text-headline-lg font-headline-lg-mobile text-headline-lg-mobile">Sign In</h1>
+<p class="font-body-sm text-body-sm text-text-secondary">Your streaming everything starts here.</p>
+</div>
+<!-- Form -->
+<form class="w-full flex flex-col gap-stack-md" onsubmit="event.preventDefault();">
+<!-- Email Field -->
+<div class="input-glass rounded-[24px] flex items-center px-4 py-3">
+<span class="material-symbols-outlined text-text-secondary mr-3 text-[20px]" style="font-variation-settings: 'FILL' 0;">mail</span>
+<input class="bg-transparent border-none outline-none text-text-primary w-full font-body-lg placeholder:text-text-secondary/50" placeholder="Email address" required="" type="email"/>
+</div>
+<!-- Password Field -->
+<div class="input-glass rounded-[24px] flex items-center px-4 py-3">
+<span class="material-symbols-outlined text-text-secondary mr-3 text-[20px]" style="font-variation-settings: 'FILL' 0;">lock</span>
+<input class="bg-transparent border-none outline-none text-text-primary w-full font-body-lg placeholder:text-text-secondary/50" placeholder="Password" required="" type="password"/>
+<button class="text-text-secondary hover:text-primary transition-colors focus:outline-none" type="button">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 0;">visibility_off</span>
+</button>
+</div>
+<!-- Actions -->
+<div class="flex justify-end w-full mb-stack-sm">
+<a class="font-label-md text-label-md text-primary hover:text-tertiary transition-colors" href="#">Forgot Password?</a>
+</div>
+<!-- Primary Button -->
+<button class="w-full bg-primary-container hover:bg-inverse-primary text-white font-title-md text-title-md rounded-[24px] py-3 transition-all duration-300 shadow-[0_4px_16px_rgba(124,58,237,0.3)] hover:shadow-[0_6px_24px_rgba(124,58,237,0.5)] active:scale-[0.98]" type="submit">
+                    Sign In
+                </button>
+</form>
+<!-- Secondary Action -->
+<div class="mt-stack-lg w-full text-center">
+<p class="font-body-sm text-body-sm text-text-secondary">
+                    Don't have an account? 
+                    <a class="text-primary font-title-md text-title-md !text-[14px] hover:text-tertiary transition-colors ml-1" href="#">Create Account</a>
+</p>
+</div>
+</div>
+</main>
+</body></html>

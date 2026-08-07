@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Profile - RonkWS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed": "#f0dbff",
+                        "primary-fixed": "#eaddff",
+                        "primary-container": "#7c3aed",
+                        "on-error-container": "#ffdad6",
+                        "error": "#ffb4ab",
+                        "surface-container-high": "#2b2835",
+                        "surface": "#181622",
+                        "on-surface": "#e6e0f0",
+                        "surface-dim": "#14121d",
+                        "text-primary": "#FFFFFF",
+                        "on-surface-variant": "#ccc3d8",
+                        "on-secondary-fixed-variant": "#6900b3",
+                        "on-secondary": "#490080",
+                        "on-tertiary": "#490081",
+                        "secondary-container": "#6f00be",
+                        "outline-variant": "#4a4455",
+                        "on-primary-fixed-variant": "#5a00c6",
+                        "on-primary-container": "#ede0ff",
+                        "secondary": "#ddb7ff",
+                        "on-primary": "#3f008e",
+                        "on-background": "#e6e0f0",
+                        "tertiary-container": "#844abe",
+                        "on-tertiary-fixed": "#2c0051",
+                        "on-secondary-container": "#d6a9ff",
+                        "secondary-fixed-dim": "#ddb7ff",
+                        "on-primary-fixed": "#25005a",
+                        "surface-container-low": "#1c1a26",
+                        "primary-fixed-dim": "#d2bbff",
+                        "text-secondary": "#B3B3C6",
+                        "tertiary-fixed": "#f0dbff",
+                        "error-container": "#93000a",
+                        "surface-container-highest": "#363340",
+                        "inverse-on-surface": "#312f3b",
+                        "surface-variant": "#363340",
+                        "surface-container-lowest": "#0f0d18",
+                        "on-tertiary-fixed-variant": "#62259b",
+                        "inverse-surface": "#e6e0f0",
+                        "outline": "#958da1",
+                        "tertiary-fixed-dim": "#ddb8ff",
+                        "primary": "#d2bbff",
+                        "tertiary": "#ddb8ff",
+                        "surface-tint": "#d2bbff",
+                        "on-secondary-fixed": "#2c0051",
+                        "surface-container": "#201e2a",
+                        "surface-bright": "#3a3744",
+                        "on-tertiary-container": "#f2e0ff",
+                        "glow-purple": "rgba(124, 58, 237, 0.4)",
+                        "background": "#14121d",
+                        "on-error": "#690005",
+                        "inverse-primary": "#732ee4"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-sm": "4px",
+                        "base": "8px",
+                        "margin-mobile": "20px",
+                        "margin-desktop": "48px",
+                        "gutter": "16px",
+                        "stack-md": "12px",
+                        "stack-lg": "24px",
+                        "pb-safe": "env(safe-area-inset-bottom, 20px)"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "title-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-lg-mobile": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "title-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "display-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "800" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.text-primary');
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        .glass-panel {
+            background-color: rgba(24, 22, 34, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+        }
+        
+        .glass-item {
+            background-color: rgba(24, 22, 34, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.2s ease;
+        }
+        
+        .glass-item:active {
+            background-color: rgba(124, 58, 237, 0.15);
+            border-color: rgba(124, 58, 237, 0.3);
+            transform: scale(0.98);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col pb-24 relative overflow-x-hidden">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b border-white/10 shadow-none">
+<div class="flex items-center justify-between px-margin-mobile h-16 max-w-screen-md mx-auto">
+<button class="hover:opacity-80 transition-opacity active:scale-95 transition-transform text-on-surface-variant flex items-center justify-center p-2 rounded-full">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">menu</span>
+</button>
+<div class="h-10 flex items-center"><img alt="RonkWS Logo" class="h-10 w-10 object-contain rounded-lg shadow-sm" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9Po0Xp67zuchoyoeUT9pB-I55kVDtUTLxfc0nrJpSeXCucOwUkcxYECXnFSzbWlNCz9D-q13vcBDjv7IsQk5T3nYaoYgP_UrAFGBhSponrKRk4a8k1btE2ZQqVuu48KGp10uICI59YqijsqiwsKfqsPX2bgar3xwnm7NFxNOraeIsUKtlOHX69TVuHT3kL6OG-1i740C4k_f4QFu-vxRgg8O4xiliB8sUGOwCjPN0lSQmKtYeDWUpXUW5KCpNNEfu9Q"/></div>
+<button class="hover:opacity-80 transition-opacity active:scale-95 transition-transform text-on-surface-variant flex items-center justify-center p-2 rounded-full">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">notifications</span>
+</button>
+</div>
+</header>
+<main class="flex-1 mt-20 px-margin-mobile max-w-screen-md mx-auto w-full flex flex-col gap-stack-lg">
+<!-- Profile Header (Bento Style) -->
+<section class="glass-panel rounded-2xl p-6 flex flex-col items-center justify-center relative overflow-hidden">
+<!-- Subtle glow background -->
+<div class="absolute inset-0 bg-primary-container/10 blur-[40px] pointer-events-none rounded-full transform -translate-y-1/2 scale-150"></div>
+<div class="relative z-10 flex flex-col items-center">
+<div class="w-24 h-24 rounded-full border-2 border-primary overflow-hidden shadow-[0_0_20px_rgba(124,58,237,0.3)] mb-4">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="A highly detailed close-up portrait of a stylish user avatar. The subject is well-lit with dramatic cinematic lighting against a dark, moody background with subtle neon purple and blue accents. The visual style is premium, high-tech corporate modern, consistent with a high-end streaming service aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBVdX-CrEckMhp3YLXM3zyrVNpl8qJaZCovyC038vIN2mzA_O13tbwi7jvlGfTxUPxLecNJAhsFLzvoy5t-YWtMqk_FJ6wHfrL86P6hjTjh6G87cRbqDsxcs_piPfurOWZdu7dNlBiuRL52dKVQr_5NgIoi5It0fkBHLNEZdCacGbQenbl9v6AZDdWNR9pRuhTkkt9Y-Jsq9MOMnc7TTI5S7t0x_Bh_Ygk1TjGklWdQoEmEQr4MHZ6M"/>
+</div>
+<h2 class="font-title-md text-title-md text-text-primary mb-1">Alex Mercer</h2>
+<p class="font-body-sm text-body-sm text-text-secondary">Member since 2023</p>
+<div class="mt-6 flex gap-4 w-full">
+<div class="flex-1 bg-surface-container-high/50 rounded-xl p-3 text-center border border-white/5">
+<span class="block font-title-md text-title-md text-primary">142</span>
+<span class="font-label-md text-label-md text-text-secondary">Watched</span>
+</div>
+<div class="flex-1 bg-surface-container-high/50 rounded-xl p-3 text-center border border-white/5">
+<span class="block font-title-md text-title-md text-primary">38</span>
+<span class="font-label-md text-label-md text-text-secondary">Reviews</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Options List -->
+<section class="flex flex-col gap-stack-md">
+<h3 class="font-label-md text-label-md text-text-secondary uppercase px-2">Account Settings</h3>
+<div class="glass-panel rounded-2xl overflow-hidden flex flex-col divide-y divide-white/10">
+<!-- Edit Profile -->
+<button class="glass-item flex items-center justify-between p-4 w-full text-left">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">edit</span>
+</div>
+<span class="font-body-lg text-body-lg text-text-primary">Edit Profile</span>
+</div>
+<span class="material-symbols-outlined text-text-secondary">chevron_right</span>
+</button>
+<!-- Dark Mode Toggle -->
+<div class="glass-item flex items-center justify-between p-4 w-full text-left">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">dark_mode</span>
+</div>
+<span class="font-body-lg text-body-lg text-text-primary">Dark Mode</span>
+</div>
+<!-- Custom Toggle Switch -->
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+<!-- Notifications -->
+<button class="glass-item flex items-center justify-between p-4 w-full text-left">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">notifications</span>
+</div>
+<span class="font-body-lg text-body-lg text-text-primary">Notifications</span>
+</div>
+<span class="material-symbols-outlined text-text-secondary">chevron_right</span>
+</button>
+<!-- Language -->
+<button class="glass-item flex items-center justify-between p-4 w-full text-left">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">language</span>
+</div>
+<span class="font-body-lg text-body-lg text-text-primary">Language</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-body-sm text-body-sm text-text-secondary">English</span>
+<span class="material-symbols-outlined text-text-secondary">chevron_right</span>
+</div>
+</button>
+</div>
+<h3 class="font-label-md text-label-md text-text-secondary uppercase px-2 mt-4">More</h3>
+<div class="glass-panel rounded-2xl overflow-hidden flex flex-col divide-y divide-white/10">
+<!-- About -->
+<button class="glass-item flex items-center justify-between p-4 w-full text-left">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest/50 flex items-center justify-center text-text-secondary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">info</span>
+</div>
+<span class="font-body-lg text-body-lg text-text-primary">About RonkWS</span>
+</div>
+<span class="material-symbols-outlined text-text-secondary">chevron_right</span>
+</button>
+</div>
+<!-- Sign Out Button -->
+<button class="mt-8 w-full py-4 rounded-xl font-title-md text-title-md text-error bg-error/10 border border-error/20 hover:bg-error/20 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">logout</span>
+                Sign Out
+            </button>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 rounded-t-xl bg-surface/80 backdrop-blur-md border-t border-white/15 shadow-[0px_-8px_24px_rgba(124,58,237,0.2)]">
+<div class="flex justify-around items-center px-4 py-2 pb-safe max-w-screen-md mx-auto">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90 transition-all duration-200 w-16" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">home</span>
+<span class="font-label-md text-label-md">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90 transition-all duration-200 w-16" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">trending_up</span>
+<span class="font-label-md text-label-md">Trending</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90 transition-all duration-200 w-16" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">star</span>
+<span class="font-label-md text-label-md">Favorites</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90 transition-all duration-200 w-16" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">search</span>
+<span class="font-label-md text-label-md">Search</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary bg-primary-container/20 rounded-xl px-3 py-1 hover:text-primary transition-colors active:scale-90 transition-all duration-200 min-w-16" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="font-label-md text-label-md">Profile</span>
+</a>
+</div>
+</nav>
+</body></html>

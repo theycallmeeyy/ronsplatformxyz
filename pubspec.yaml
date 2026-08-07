@@ -1,0 +1,29 @@
+name: ronkws_streaming_hub
+description: "RonKWS Streaming Hub - Ultimate All-In-One Entertainment & Streaming Platform built with Flutter."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  provider: ^6.1.2
+  google_fonts: ^6.2.1
+  shared_preferences: ^2.2.3
+  url_launcher: ^6.3.0
+  youtube_player_iframe: ^5.1.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/

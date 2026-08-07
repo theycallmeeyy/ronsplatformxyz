@@ -1,0 +1,290 @@
+<!DOCTYPE html><html class="dark" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Trending - RonkWS</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "secondary-fixed": "#f0dbff",
+                        "primary-fixed": "#eaddff",
+                        "primary-container": "#7c3aed",
+                        "on-error-container": "#ffdad6",
+                        "error": "#ffb4ab",
+                        "surface-container-high": "#2b2835",
+                        "surface": "#181622",
+                        "on-surface": "#e6e0f0",
+                        "surface-dim": "#14121d",
+                        "text-primary": "#FFFFFF",
+                        "on-surface-variant": "#ccc3d8",
+                        "on-secondary-fixed-variant": "#6900b3",
+                        "on-secondary": "#490080",
+                        "on-tertiary": "#490081",
+                        "secondary-container": "#6f00be",
+                        "outline-variant": "#4a4455",
+                        "on-primary-fixed-variant": "#5a00c6",
+                        "on-primary-container": "#ede0ff",
+                        "secondary": "#ddb7ff",
+                        "on-primary": "#3f008e",
+                        "on-background": "#e6e0f0",
+                        "tertiary-container": "#844abe",
+                        "on-tertiary-fixed": "#2c0051",
+                        "on-secondary-container": "#d6a9ff",
+                        "secondary-fixed-dim": "#ddb7ff",
+                        "on-primary-fixed": "#25005a",
+                        "surface-container-low": "#1c1a26",
+                        "primary-fixed-dim": "#d2bbff",
+                        "text-secondary": "#B3B3C6",
+                        "tertiary-fixed": "#f0dbff",
+                        "error-container": "#93000a",
+                        "surface-container-highest": "#363340",
+                        "inverse-on-surface": "#312f3b",
+                        "surface-variant": "#363340",
+                        "surface-container-lowest": "#0f0d18",
+                        "on-tertiary-fixed-variant": "#62259b",
+                        "inverse-surface": "#e6e0f0",
+                        "outline": "#958da1",
+                        "tertiary-fixed-dim": "#ddb8ff",
+                        "primary": "#d2bbff",
+                        "tertiary": "#ddb8ff",
+                        "surface-tint": "#d2bbff",
+                        "on-secondary-fixed": "#2c0051",
+                        "surface-container": "#201e2a",
+                        "surface-bright": "#3a3744",
+                        "on-tertiary-container": "#f2e0ff",
+                        "glow-purple": "rgba(124, 58, 237, 0.4)",
+                        "background": "#14121d",
+                        "on-error": "#690005",
+                        "inverse-primary": "#732ee4"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "stack-sm": "4px",
+                        "base": "8px",
+                        "margin-mobile": "20px",
+                        "margin-desktop": "48px",
+                        "gutter": "16px",
+                        "stack-md": "12px",
+                        "stack-lg": "24px"
+                    },
+                    fontFamily: {
+                        "headline-lg": ["Inter"],
+                        "title-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-lg-mobile": ["Inter"]
+                    },
+                    fontSize: {
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "title-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "display-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "800" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #14121d;
+            color: #FFFFFF;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .glass-card {
+            background-color: rgba(24, 22, 34, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 24px;
+        }
+        .glass-featured {
+            box-shadow: 0px 8px 32px rgba(124, 58, 237, 0.4);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="antialiased pb-24 pt-16">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b border-white/10 shadow-none flex items-center justify-between px-margin-mobile h-16">
+<button aria-label="Menu" class="text-primary hover:opacity-80 transition-opacity active:scale-95 transition-transform">
+<span class="material-symbols-outlined font-title-md text-title-md">menu</span>
+</button>
+<div class="h-8 flex items-center"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDLPssUye7UDbFY6FqsIwhB2wcH-F8MeSn0GvcoNTz9DVI_uDC4utdYVBIEKvQnDT9Dk5vO1sFYRVzesbZFxe2Z07jUu2BwxTZcMrCVXTeEM5SenAzDE70SkY0PnxjB9VoBRI2sHWcugSPWzioZpThRP6iNTU_Lhk9_ie6brAs_Ed-93dERxiXK8zuwtJ-7YQ7E3o0TH0KyiZVecX1gwyYkz-v6kL43hWjAal0hj8KGPmKupkPC3OudWJgfxzytMRzONg" alt="RonkWS Logo" class="h-full w-auto object-contain"></div>
+<button aria-label="Notifications" class="text-primary hover:opacity-80 transition-opacity active:scale-95 transition-transform">
+<span class="material-symbols-outlined font-title-md text-title-md">notifications</span>
+</button>
+</header>
+<main class="px-margin-mobile flex flex-col gap-stack-lg mt-stack-lg">
+<!-- Header -->
+<section>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-text-primary mb-stack-sm">Trending Now</h1>
+<p class="font-body-lg text-body-lg text-text-secondary">Discover what everyone is watching today.</p>
+</section>
+<!-- Most Visited Carousel -->
+<section>
+<h2 class="font-title-md text-title-md text-text-primary mb-stack-md flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+                Most Visited
+            </h2>
+<div class="flex overflow-x-auto gap-gutter pb-4 hide-scrollbar -mx-margin-mobile px-margin-mobile snap-x snap-mandatory">
+<!-- Card 1 -->
+<div class="snap-center shrink-0 w-[280px] h-[400px] glass-card glass-featured relative overflow-hidden group cursor-pointer rounded-[24px]">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="A highly detailed cinematic movie poster showing a futuristic cyberpunk city at night with neon lights reflecting on wet streets. A lone figure in a dark coat stands looking at the skyline. The color palette is dominated by deep purples, blues, and bright pink accents, creating a moody, high-tech atmosphere." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDQKB3B9KTvog0RB7WU969gAZ3pivZ1NlLzXYYZOJuovoNUqyQ9Uo-pKKAR_e4YeoeFeOKPS8aoK5GqVhqlthh_pIfVjfAjpnH4tzXpUs4ZDQYrIc-4gZGAYzZRhE5TDx_ULoiXaKyH3cJ5YU7sABBDPrNgeNkqUPct_3fL-I7w4Zq-jTBIBOUZlWrw0LhX9JNHJckjTui-t-WjgkCyuxPv-gPcpFvhZN_h6nHvIjcXCUU2n6O2BL83')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent"></div>
+<div class="absolute bottom-0 left-0 p-stack-md w-full">
+<div class="flex items-center gap-2 mb-2">
+<span class="bg-primary-container text-white font-label-md text-label-md px-2 py-1 rounded-full uppercase tracking-widest shadow-[0_0_10px_rgba(124,58,237,0.8)]">#1</span>
+<span class="font-label-md text-label-md text-text-secondary">Sci-Fi</span>
+</div>
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-text-primary line-clamp-2 leading-tight">Neon Shadows</h3>
+<p class="font-body-sm text-body-sm text-text-secondary mt-1 line-clamp-2">In the year 2145, a rogue AI discovers the true meaning of consciousness amidst a neon-drenched metropolis.</p>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="snap-center shrink-0 w-[280px] h-[400px] glass-card relative overflow-hidden group cursor-pointer rounded-[24px]">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="A beautiful fantasy landscape showing an ancient glowing tree in the middle of a misty forest. Bioluminescent plants dot the foreground. The lighting is soft and magical, using cool blues and glowing warm greens, evoking a sense of wonder and mystery." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBp8T61C8-szwCFitOeFoopt2V0w8BTtm4T8eHtgbR3gxRuKZtf4KYYlo_KcoQTM3NIPLw9PaZDRerSCwZUYpv9wMJaSDSmGnVnjungqwzl4mwmwC-XXLrMoOFwESrDTFAYTCgNoiUV61VJKMgEW42yDO9RRGRLQB5IX90vMY7BB9pnVeteRVsjeEoUz-0gGtW9JRMLXZIZI_6905jZrb9lHZURBJx2B1GGHJDvGHAuIZTMbtddTBZ-')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent"></div>
+<div class="absolute bottom-0 left-0 p-stack-md w-full">
+<div class="flex items-center gap-2 mb-2">
+<span class="bg-surface-bright text-text-primary font-label-md text-label-md px-2 py-1 rounded-full uppercase tracking-widest border border-white/10">#2</span>
+<span class="font-label-md text-label-md text-text-secondary">Fantasy</span>
+</div>
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-text-primary line-clamp-2 leading-tight">Echoes of Eden</h3>
+<p class="font-body-sm text-body-sm text-text-secondary mt-1 line-clamp-2">A reluctant hero must journey to the heart of the ancient forest to save their dying world.</p>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="snap-center shrink-0 w-[280px] h-[400px] glass-card relative overflow-hidden group cursor-pointer rounded-[24px]">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="A tense, modern thriller poster featuring a close-up of a person's eye reflecting a complex string of glowing red computer code. The background is pitch black, emphasizing the stark contrast and creating an atmosphere of suspense and high-stakes espionage." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAp7jDG7Ymem9c1yapFReB1FhE-lo7LCvAuB0kNQ3HxmaoX7A5poveMf_v0RqDB5QjGcYfIc1ACG-iDnDzwyJFUgf437jPDqjrnq5aHCq97iFs2KzjwwrR-TRmbwC5BS9Ps0lngPe0n4gH2ahn5gDQPLU6JuPnsNrcweBBDcFiLU1SobnBPOfnSuqNF1_-tOiFd0e766N6l-HSEV126f9IP6ZeNs5GieW1ZVNHlLb2BlM8PShoJtZwY')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent"></div>
+<div class="absolute bottom-0 left-0 p-stack-md w-full">
+<div class="flex items-center gap-2 mb-2">
+<span class="bg-surface-bright text-text-primary font-label-md text-label-md px-2 py-1 rounded-full uppercase tracking-widest border border-white/10">#3</span>
+<span class="font-label-md text-label-md text-text-secondary">Thriller</span>
+</div>
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-text-primary line-clamp-2 leading-tight">The Zero Day</h3>
+<p class="font-body-sm text-body-sm text-text-secondary mt-1 line-clamp-2">A cybersecurity expert uncovers a global conspiracy hidden within the lines of a seemingly innocuous update.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Popular Today Vertical List -->
+<section>
+<div class="flex items-center justify-between mb-stack-md">
+<h2 class="font-title-md text-title-md text-text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">trending_up</span>
+                    Popular Today
+                </h2>
+<button class="font-label-md text-label-md text-primary uppercase tracking-wider hover:opacity-80 transition-opacity">View All</button>
+</div>
+<div class="flex flex-col gap-stack-md">
+<!-- List Item 1 -->
+<div class="glass-card p-stack-sm flex items-center gap-stack-md rounded-[24px] cursor-pointer hover:bg-surface-container-high transition-colors">
+<div class="w-24 h-24 rounded-[16px] overflow-hidden shrink-0 relative">
+<div class="absolute inset-0 bg-cover bg-center" data-alt="A stylized portrait of a female astronaut floating in zero gravity inside a futuristic spacecraft, illuminated by soft blue and purple console lights. The expression is focused and determined. High contrast, cinematic lighting." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAbLD-cLY-f2OuGiyrAB1UrJ5HzqTLopvdtOErtkZRIeMrVpamh6aA5KPijNkDd8v9dWimBa8bHGWZvUnro6RADsckZ5E1iAD8AC1Tx_w4XwIMGTaqjWIaPM5_0fiC1Mt2F3k9375rvzTXbu4L1k5aB6EgclQMraeCKf-_w0w_CsEsD2T1TwjHx-E_rWMdqtVud2Nl7CvMxIEKyE0MQoE9Aq0SA3wGLeVs03bUWHUw8-UQu4JgweGMV')"></div>
+</div>
+<div class="flex-1 pr-stack-sm py-2">
+<h4 class="font-title-md text-title-md text-text-primary mb-1">Starlight Protocol</h4>
+<div class="flex items-center gap-3 font-body-sm text-body-sm text-text-secondary">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-primary" style="font-variation-settings: 'FILL' 1;">star</span> 4.8</span>
+<span class="">•</span>
+<span class="">Sci-Fi Series</span>
+</div>
+</div>
+<button class="mr-stack-md text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<!-- List Item 2 -->
+<div class="glass-card p-stack-sm flex items-center gap-stack-md rounded-[24px] cursor-pointer hover:bg-surface-container-high transition-colors">
+<div class="w-24 h-24 rounded-[16px] overflow-hidden shrink-0 relative">
+<div class="absolute inset-0 bg-cover bg-center" data-alt="A dramatic shot of two samurai facing off in a field of tall grass during a blood-red sunset. Silhouettes against the bright sky, conveying tension and traditional cinematic beauty. Stylized and highly detailed." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBd8Xj63QEc-9bVN-pEUillV01pIHZ9MofWV0yDAMbLNf4HFyFVod90V9MUADb6u1H-yf72xuh0TEAfQsOx29D5ZbcaOTXPIOlc3pC1ik7z8wV3-oJNLiQ-0diUQnp48IH-gy1FWvcKDbCc6KmncVsr5G_l9kRNHbPBticxDA6jlgCIySE8e8UiclPQFUgBjf92Ey9Yh0Zm2EfLJ9q0AOLCuVBWtFj57koYd7QXGbHm6D3z6KoQBucJ')"></div>
+</div>
+<div class="flex-1 pr-stack-sm py-2">
+<h4 class="font-title-md text-title-md text-text-primary mb-1">Crimson Blade</h4>
+<div class="flex items-center gap-3 font-body-sm text-body-sm text-text-secondary">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-primary" style="font-variation-settings: 'FILL' 1;">star</span> 4.9</span>
+<span class="">•</span>
+<span class="">Action Movie</span>
+</div>
+</div>
+<button class="mr-stack-md text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<!-- List Item 3 -->
+<div class="glass-card p-stack-sm flex items-center gap-stack-md rounded-[24px] cursor-pointer hover:bg-surface-container-high transition-colors">
+<div class="w-24 h-24 rounded-[16px] overflow-hidden shrink-0 relative">
+<div class="absolute inset-0 bg-cover bg-center" data-alt="A warm, inviting comedy poster featuring a diverse group of friends laughing around a crowded dinner table in a warmly lit, slightly messy apartment. Vibrant colors, cheerful mood." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCBTHSdgLtPZTjrcEx1v4YM2OX8I1hCVuA5kIXr2YjS9I8DCvPMwh9lwhkBljyed6uDwGQ5iC20QuvYE6b-ooCbERxt6Nce1U2u7pIG9iuvjPHYIzXnbfGbo5DnxR9oLKRmU3RzQA2ChW2V0GPToDt6hM5z175en0wyxxhFlHYlzBQiQrFAKlvlAH04kaSz8YQzQufOCskrqaqx0sODtMGLO92rGrkzqgVapY9aqnuS3uUMZvHtzSb9')"></div>
+</div>
+<div class="flex-1 pr-stack-sm py-2">
+<h4 class="font-title-md text-title-md text-text-primary mb-1">Dinner at Eight</h4>
+<div class="flex items-center gap-3 font-body-sm text-body-sm text-text-secondary">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-primary" style="font-variation-settings: 'FILL' 1;">star</span> 4.5</span>
+<span class="">•</span>
+<span class="">Comedy Series</span>
+</div>
+</div>
+<button class="mr-stack-md text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 rounded-t-xl bg-surface/80 backdrop-blur-md border-t border-white/15 shadow-[0px_-8px_24px_rgba(124,58,237,0.2)] flex justify-around items-center px-4 py-2 pb-safe md:hidden">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined mb-1">home</span>
+<span class="font-label-md text-label-md">Home</span>
+</a>
+<!-- Active Tab: Trending -->
+<a class="flex flex-col items-center justify-center text-primary bg-primary-container/20 rounded-xl px-3 py-1 hover:text-primary transition-colors active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">trending_up</span>
+<span class="font-label-md text-label-md">Trending</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined mb-1">star</span>
+<span class="font-label-md text-label-md">Favorites</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined mb-1">search</span>
+<span class="font-label-md text-label-md">Search</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined mb-1">person</span>
+<span class="font-label-md text-label-md">Profile</span>
+</a>
+</nav>
+
+
+
+
+</body></html>

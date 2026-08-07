@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>RonkWS - Home</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "secondary-fixed": "#f0dbff",
+                        "primary-fixed": "#eaddff",
+                        "primary-container": "#7c3aed",
+                        "on-error-container": "#ffdad6",
+                        "error": "#ffb4ab",
+                        "surface-container-high": "#2b2835",
+                        "surface": "#181622",
+                        "on-surface": "#e6e0f0",
+                        "surface-dim": "#14121d",
+                        "text-primary": "#FFFFFF",
+                        "on-surface-variant": "#ccc3d8",
+                        "on-secondary-fixed-variant": "#6900b3",
+                        "on-secondary": "#490080",
+                        "on-tertiary": "#490081",
+                        "secondary-container": "#6f00be",
+                        "outline-variant": "#4a4455",
+                        "on-primary-fixed-variant": "#5a00c6",
+                        "on-primary-container": "#ede0ff",
+                        "secondary": "#ddb7ff",
+                        "on-primary": "#3f008e",
+                        "on-background": "#e6e0f0",
+                        "tertiary-container": "#844abe",
+                        "on-tertiary-fixed": "#2c0051",
+                        "on-secondary-container": "#d6a9ff",
+                        "secondary-fixed-dim": "#ddb7ff",
+                        "on-primary-fixed": "#25005a",
+                        "surface-container-low": "#1c1a26",
+                        "primary-fixed-dim": "#d2bbff",
+                        "text-secondary": "#B3B3C6",
+                        "tertiary-fixed": "#f0dbff",
+                        "error-container": "#93000a",
+                        "surface-container-highest": "#363340",
+                        "inverse-on-surface": "#312f3b",
+                        "surface-variant": "#363340",
+                        "surface-container-lowest": "#0f0d18",
+                        "on-tertiary-fixed-variant": "#62259b",
+                        "inverse-surface": "#e6e0f0",
+                        "outline": "#958da1",
+                        "tertiary-fixed-dim": "#ddb8ff",
+                        "primary": "#d2bbff",
+                        "tertiary": "#ddb8ff",
+                        "surface-tint": "#d2bbff",
+                        "on-secondary-fixed": "#2c0051",
+                        "surface-container": "#201e2a",
+                        "surface-bright": "#3a3744",
+                        "on-tertiary-container": "#f2e0ff",
+                        "glow-purple": "rgba(124, 58, 237, 0.4)",
+                        "background": "#14121d",
+                        "on-error": "#690005",
+                        "inverse-primary": "#732ee4"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "stack-sm": "4px",
+                        "base": "8px",
+                        "margin-mobile": "20px",
+                        "margin-desktop": "48px",
+                        "gutter": "16px",
+                        "stack-md": "12px",
+                        "stack-lg": "24px"
+                    },
+                    fontFamily: {
+                        "headline-lg": ["Inter"],
+                        "title-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-lg-mobile": ["Inter"]
+                    },
+                    fontSize: {
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "title-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "display-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "800" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .glass-card {
+            background-color: rgba(24, 22, 34, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .hero-glow {
+            background: radial-gradient(circle at 50% 50%, rgba(124, 58, 237, 0.3) 0%, transparent 60%);
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-background text-text-primary min-h-screen pb-24 md:pb-0">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b border-white/10 shadow-none flex items-center justify-between px-margin-mobile h-16 md:hidden">
+<button class="text-on-surface-variant hover:opacity-80 transition-opacity active:scale-95 transition-transform flex items-center justify-center p-2">
+<span class="material-symbols-outlined text-2xl" data-icon="menu">menu</span>
+</button>
+<div class="flex items-center gap-2">
+<img alt="RonkWS Logo" class="h-10 w-10 object-contain rounded-md" data-alt="The RonkWS logo featuring a glowing purple stylized R on a dark, rounded rectangular background, giving a premium, high-tech, cinematic streaming aggregator aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCThUm5wZQfxC8MBerKR8tw8ryPRECJ7cogILWUKybbbunROvKNKM2gLXTIssGPncwvNb_0xmAk0TdJSR8Nal4vQrn42XrArFM9bQjlzvKiN2bgK5Y69JlKWL78v3PTqVVH2iyNr9mhsLMdl7Kh4XSDI4hsoB_QU5ac1MAEHpLZpQ6eVDVFPJrD9dm2VBsrhNEKp7ygTAeHSexW4dyhWO0Ej3dPhw_QHB1_nMOJTAnJaogACK8AznKK26CwWyf7bmaZpQ"/>
+</div>
+<button class="text-on-surface-variant hover:opacity-80 transition-opacity active:scale-95 transition-transform flex items-center justify-center p-2">
+<span class="material-symbols-outlined text-2xl" data-icon="notifications">notifications</span>
+</button>
+</header>
+<!-- Desktop Nav (Hidden on Mobile) -->
+<nav class="hidden md:flex fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b border-white/10 px-margin-desktop h-20 items-center justify-between">
+<div class="flex items-center gap-3">
+<img alt="RonkWS Logo" class="h-10 w-10 object-contain rounded-md" data-alt="The RonkWS logo featuring a glowing purple stylized R on a dark, rounded rectangular background, giving a premium, high-tech, cinematic streaming aggregator aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuButBwIYJMVCEXC2CrPUj0Mz6Cov4Vs8jDo6bpEhwUXJpgzQrkXQk5HaU06kE_HCC2U2eUWLArj4HZhKqAks8XGPWo2Tm_gFDejJVJ6KhLhlKzhYquFXZkNKUM1B6wiCPJQLxaxL_figBaj3WCeR5v28D-Ob4c7zweMH_0ysGX1fIi6fHtTOSI3yNMK2k7Cz8d0iZoFmBofPBCtQDtsJBKNELH287UMmqSQuVuzDNdT1yqeFA7PcP3XZNpMg9bEo7o-xg"/>
+<span class="font-headline-lg text-headline-lg font-bold text-primary tracking-tighter">RonkWS</span>
+</div>
+<div class="flex gap-8">
+<a class="text-primary font-title-md text-title-md border-b-2 border-primary pb-1" href="#">Home</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-title-md text-title-md pb-1" href="#">Trending</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-title-md text-title-md pb-1" href="#">Favorites</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-title-md text-title-md pb-1" href="#">Search</a>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:opacity-80 transition-opacity p-2"><span class="material-symbols-outlined text-2xl" data-icon="notifications">notifications</span></button>
+<div class="w-10 h-10 rounded-full bg-surface-container-high border border-white/10 flex items-center justify-center overflow-hidden">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="person">person</span>
+</div>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="pt-20 md:pt-28 px-margin-mobile md:px-margin-desktop max-w-7xl mx-auto space-y-stack-lg">
+<!-- Hero Banner -->
+<section class="relative rounded-3xl overflow-hidden glass-card p-8 md:p-12 min-h-[300px] flex flex-col justify-center items-center text-center">
+<div class="absolute inset-0 hero-glow opacity-60"></div>
+<div class="relative z-10 space-y-stack-md max-w-2xl">
+<h1 class="font-display-lg text-display-lg text-text-primary">
+                    RonkWS <br/>
+<span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Your Streaming Everything</span>
+</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">
+                    Discover movies, TV shows, anime, manga, live TV, apps, and more in one place.
+                </p>
+<div class="pt-4">
+<button class="bg-primary-container hover:bg-primary-container/90 text-white font-title-md text-title-md py-3 px-8 rounded-full transition-colors shadow-[0_4px_14px_0_rgba(124,58,237,0.39)]">
+                        Explore Now
+                    </button>
+</div>
+</div>
+</section>
+<!-- Stats Row -->
+<section class="grid grid-cols-3 gap-gutter">
+<div class="glass-card rounded-2xl p-4 flex flex-col items-center justify-center text-center space-y-stack-sm hover:shadow-[0px_8px_24px_rgba(124,58,237,0.2)] transition-shadow">
+<span class="material-symbols-outlined text-primary text-3xl mb-1" data-icon="language">language</span>
+<span class="font-title-md text-title-md text-text-primary">15K+</span>
+<span class="font-label-md text-label-md text-on-surface-variant uppercase">Total Sites</span>
+</div>
+<div class="glass-card rounded-2xl p-4 flex flex-col items-center justify-center text-center space-y-stack-sm hover:shadow-[0px_8px_24px_rgba(124,58,237,0.2)] transition-shadow">
+<span class="material-symbols-outlined text-secondary text-3xl mb-1" data-icon="category">category</span>
+<span class="font-title-md text-title-md text-text-primary">42</span>
+<span class="font-label-md text-label-md text-on-surface-variant uppercase">Categories</span>
+</div>
+<div class="glass-card rounded-2xl p-4 flex flex-col items-center justify-center text-center space-y-stack-sm hover:shadow-[0px_8px_24px_rgba(124,58,237,0.2)] transition-shadow">
+<span class="material-symbols-outlined text-tertiary text-3xl mb-1" data-icon="public">public</span>
+<span class="font-title-md text-title-md text-text-primary">120+</span>
+<span class="font-label-md text-label-md text-on-surface-variant uppercase">Regions</span>
+</div>
+</section>
+<!-- Search & Filter -->
+<section class="flex gap-3 items-center">
+<div class="relative flex-grow">
+<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="search">search</span>
+</div>
+<input class="w-full bg-surface-container-high/60 border border-white/10 rounded-full py-3 pl-12 pr-4 text-text-primary placeholder-on-surface-variant focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary backdrop-blur-md transition-all" placeholder="Search for anything..." type="text"/>
+</div>
+<button class="glass-card rounded-full p-3 flex items-center justify-center hover:bg-surface-container-highest transition-colors flex-shrink-0">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="tune">tune</span>
+</button>
+<button class="glass-card rounded-full p-3 flex items-center justify-center hover:bg-surface-container-highest transition-colors flex-shrink-0">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="sort">sort</span>
+</button>
+</section>
+<!-- Categories -->
+<section class="overflow-x-auto hide-scrollbar -mx-margin-mobile px-margin-mobile md:mx-0 md:px-0">
+<div class="flex gap-2 w-max pb-2">
+<button class="bg-gradient-to-r from-primary-container to-secondary-container text-white px-5 py-2 rounded-full font-label-md text-label-md">All</button>
+<button class="glass-card text-on-surface-variant px-5 py-2 rounded-full font-label-md text-label-md hover:text-white transition-colors">Movies</button>
+<button class="glass-card text-on-surface-variant px-5 py-2 rounded-full font-label-md text-label-md hover:text-white transition-colors">TV Shows</button>
+<button class="glass-card text-on-surface-variant px-5 py-2 rounded-full font-label-md text-label-md hover:text-white transition-colors">Anime</button>
+<button class="glass-card text-on-surface-variant px-5 py-2 rounded-full font-label-md text-label-md hover:text-white transition-colors">Manga</button>
+<button class="glass-card text-on-surface-variant px-5 py-2 rounded-full font-label-md text-label-md hover:text-white transition-colors">Live TV</button>
+<button class="glass-card text-on-surface-variant px-5 py-2 rounded-full font-label-md text-label-md hover:text-white transition-colors">Sports</button>
+<button class="glass-card text-on-surface-variant px-5 py-2 rounded-full font-label-md text-label-md hover:text-white transition-colors">Apps</button>
+<button class="glass-card text-on-surface-variant px-5 py-2 rounded-full font-label-md text-label-md hover:text-white transition-colors">Trending</button>
+</div>
+</section>
+<!-- Content Grid -->
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+<!-- Card 1 -->
+<div class="glass-card rounded-[24px] p-5 flex flex-col gap-4 hover:shadow-[0px_8px_24px_rgba(124,58,237,0.2)] hover:border-primary/30 transition-all group">
+<div class="flex items-center justify-between">
+<div class="w-12 h-12 rounded-xl bg-[#E50914] flex items-center justify-center">
+<span class="font-bold text-white text-xl">N</span>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="favorite">favorite</span>
+</button>
+</div>
+<div>
+<h3 class="font-title-md text-title-md text-text-primary">Netflix</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">netflix.com</p>
+</div>
+<div class="mt-auto pt-2">
+<button class="w-full bg-surface-container-highest hover:bg-primary-container text-white font-label-md text-label-md py-2 rounded-lg transition-colors group-hover:bg-primary-container">
+                        Open
+                    </button>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="glass-card rounded-[24px] p-5 flex flex-col gap-4 hover:shadow-[0px_8px_24px_rgba(124,58,237,0.2)] hover:border-primary/30 transition-all group">
+<div class="flex items-center justify-between">
+<div class="w-12 h-12 rounded-xl bg-[#113CCF] flex items-center justify-center">
+<span class="font-bold text-white text-xl">D+</span>
+</div>
+<button class="text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="favorite" data-weight="fill" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</button>
+</div>
+<div>
+<h3 class="font-title-md text-title-md text-text-primary">Disney+</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">disneyplus.com</p>
+</div>
+<div class="mt-auto pt-2">
+<button class="w-full bg-surface-container-highest hover:bg-primary-container text-white font-label-md text-label-md py-2 rounded-lg transition-colors group-hover:bg-primary-container">
+                        Open
+                    </button>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="glass-card rounded-[24px] p-5 flex flex-col gap-4 hover:shadow-[0px_8px_24px_rgba(124,58,237,0.2)] hover:border-primary/30 transition-all group">
+<div class="flex items-center justify-between">
+<div class="w-12 h-12 rounded-xl bg-[#F47521] flex items-center justify-center">
+<span class="font-bold text-white text-xl">CR</span>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="favorite">favorite</span>
+</button>
+</div>
+<div>
+<h3 class="font-title-md text-title-md text-text-primary">Crunchyroll</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">crunchyroll.com</p>
+</div>
+<div class="mt-auto pt-2">
+<button class="w-full bg-surface-container-highest hover:bg-primary-container text-white font-label-md text-label-md py-2 rounded-lg transition-colors group-hover:bg-primary-container">
+                        Open
+                    </button>
+</div>
+</div>
+</section>
+<!-- Spacer for mobile nav -->
+<div class="h-10 md:hidden"></div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 w-full z-50 rounded-t-xl bg-surface/80 backdrop-blur-md border-t border-white/15 shadow-[0px_-8px_24px_rgba(124,58,237,0.2)] flex justify-around items-center px-4 py-2 pb-safe">
+<a class="flex flex-col items-center justify-center text-primary bg-primary-container/20 rounded-xl px-3 py-1 active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="home" data-weight="fill" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-label-md text-label-md">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90 transition-all duration-200 px-3 py-1" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="trending_up">trending_up</span>
+<span class="font-label-md text-label-md">Trending</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90 transition-all duration-200 px-3 py-1" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="star">star</span>
+<span class="font-label-md text-label-md">Favorites</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90 transition-all duration-200 px-3 py-1" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="search">search</span>
+<span class="font-label-md text-label-md">Search</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90 transition-all duration-200 px-3 py-1" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="person">person</span>
+<span class="font-label-md text-label-md">Profile</span>
+</a>
+</nav>
+</body></html>
