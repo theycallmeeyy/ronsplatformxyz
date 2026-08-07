@@ -117,6 +117,17 @@ export default function Navigation() {
                   Admin
                 </button>
               )}
+              <button
+                onClick={() => setCurrentRoute('dmca')}
+                className={`font-semibold text-sm transition-all pb-1 flex items-center gap-1.5 ${
+                  currentRoute === 'dmca'
+                    ? 'text-purple-300 border-b-2 border-purple-500'
+                    : 'text-zinc-400 hover:text-purple-300'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[18px]">gavel</span>
+                DMCA
+              </button>
             </>
           )}
         </nav>

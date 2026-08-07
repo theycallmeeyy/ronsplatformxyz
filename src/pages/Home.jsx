@@ -5,6 +5,7 @@ import ContentCard from '../components/ContentCard';
 
 export default function Home() {
   const {
+    items,
     filteredItems,
     selectedCategory,
     setSelectedCategory,
@@ -14,6 +15,9 @@ export default function Home() {
     openItemModal
   } = useContent();
   const { setCurrentRoute } = useAuth();
+
+  const warningUrl = 'https://brave.com/download/';
+  const warningLabel = 'Brave';
 
   const categories = [
     'All',
@@ -48,6 +52,41 @@ export default function Home() {
             >
               Explore Now
             </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Warning Banner */}
+      <section className="glass-card rounded-3xl overflow-hidden border border-rose-500/20 bg-rose-500/10 p-4 text-white shadow-[0_10px_40px_rgba(219,39,119,0.15)]">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <span className="material-symbols-outlined text-3xl text-rose-300">warning</span>
+            <div>
+              <p className="text-sm font-bold uppercase tracking-[0.18em] text-rose-100">Before clicking any link!!!</p>
+              <p className="text-xs text-rose-100/80">
+                Use Brave or uBlock Origin to stop unwanted popups and ads.
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <a
+              href="https://brave.com/download/"
+              target="_blank"
+              rel="noreferrer noopener"
+              className="inline-flex items-center gap-2 rounded-full border border-rose-400/30 bg-rose-500/20 px-4 py-2 text-xs font-semibold text-white hover:bg-rose-400/20 transition-all"
+            >
+              <img src="https://brave.com/static-assets/images/brave-logo-sans-text.svg" alt="Brave" className="h-4 w-4 object-contain" />
+              Brave Download
+            </a>
+            <a
+              href="https://ublockorigin.com/"
+              target="_blank"
+              rel="noreferrer noopener"
+              className="inline-flex items-center gap-2 rounded-full border border-rose-400/30 bg-rose-500/20 px-4 py-2 text-xs font-semibold text-white hover:bg-rose-400/20 transition-all"
+            >
+              <img src="https://ublockorigin.com/img/logo/uBlock-Origin.svg?v=1.1" alt="uBlock Origin" className="h-4 w-4 object-contain" />
+              uBlock Origin
+            </a>
           </div>
         </div>
       </section>
@@ -180,7 +219,7 @@ export default function Home() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
             {filteredItems.map((item) => (
               <ContentCard key={item.id} item={item} />
             ))}

@@ -150,10 +150,23 @@ app.post('/api/auth/logout', (req, res) => {
   return res.json({ success: true });
 });
 
+app.get('/api/config', (req, res) => {
+  return res.json({
+    success: true,
+    config: {
+      googleClientId: GOOGLE_CLIENT_ID || null
+    }
+  });
+});
+
 app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'RonKws auth server is running' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Auth server listening on http://localhost:${PORT}`);
-});
+if (process.env.VERCEL !== '1') {
+  app.listen(PORT, () => {
+    console.log(`Auth server listening on http://localhost:${PORT}`);
+  });
+}
+
+export default app;

@@ -18,12 +18,35 @@ export default function Profile() {
   const [editName, setEditName] = useState(user?.name || '');
   const [editBio, setEditBio] = useState(user?.bio || '');
   const [editAvatar, setEditAvatar] = useState(user?.avatar || '');
+  const [avatarFileError, setAvatarFileError] = useState('');
 
   useEffect(() => {
     setEditName(user?.name || '');
     setEditBio(user?.bio || '');
     setEditAvatar(user?.avatar || '');
+    setAvatarFileError('');
   }, [user]);
+
+  const handleAvatarFileChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setAvatarFileError('Please choose an image file.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setEditAvatar(reader.result);
+        setAvatarFileError('');
+      }
+    };
+    reader.onerror = () => {
+      setAvatarFileError('Unable to read the selected image. Please try another file.');
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Change Password Form
   const [currPassword, setCurrPassword] = useState('');
@@ -285,7 +308,17 @@ export default function Profile() {
                   placeholder="https://..."
                   className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-purple-500 mb-2"
                 />
-                <div className="flex gap-2">
+                <div className="mb-3">
+                  <label className="text-xs font-semibold text-zinc-400 block mb-2">Upload Avatar</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarFileChange}
+                    className="w-full text-xs text-white file:bg-purple-600 file:text-white file:px-3 file:py-2 file:rounded-full file:border-0"
+                  />
+                  {avatarFileError && <p className="text-xs text-rose-400 mt-2">{avatarFileError}</p>}
+                </div>
+                <div className="flex gap-2 flex-wrap">
                   {avatarPresets.map((preset, idx) => (
                     <button
                       key={idx}

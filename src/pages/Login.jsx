@@ -29,9 +29,32 @@ export default function Login() {
   const [googleError, setGoogleError] = useState('');
   const [googleLoaded, setGoogleLoaded] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [googleClientId, setGoogleClientId] = useState(import.meta.env.VITE_GOOGLE_CLIENT_ID || '');
 
-  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
   const isGoogleConfigured = Boolean(googleClientId);
+  const shouldFetchGoogleConfig = !import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+  useEffect(() => {
+    if (!shouldFetchGoogleConfig) return;
+
+    const fetchConfig = async () => {
+      try {
+        const response = await fetch(`${apiBaseUrl}/api/config`);
+        const data = await response.json();
+        if (data?.success && data?.config?.googleClientId) {
+          setGoogleClientId(data.config.googleClientId);
+        } else {
+          setGoogleError('Google sign-in is not configured yet on the backend.');
+        }
+      } catch (error) {
+        console.error('Failed to load Google config:', error);
+        setGoogleError('Unable to load Google configuration from the server.');
+      }
+    };
+
+    fetchConfig();
+  }, [apiBaseUrl, shouldFetchGoogleConfig]);
 
   useEffect(() => {
     const scriptId = 'google-identity-script';

@@ -14,6 +14,7 @@ import Favorites from './pages/Favorites';
 import SearchPage from './pages/SearchPage';
 import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
+import Dmca from './pages/Dmca';
 
 function MainApp() {
   const { authLoaded, isAuthenticated, playIntroAnimation, currentRoute, completeIntroAnimation } = useAuth();
@@ -58,6 +59,7 @@ function MainApp() {
         {currentRoute === 'search' && <SearchPage />}
         {currentRoute === 'profile' && <Profile />}
         {currentRoute === 'admin' && <AdminDashboard />}
+        {currentRoute === 'dmca' && <Dmca />}
       </main>
 
       {/* Content Stream Player Modal */}
