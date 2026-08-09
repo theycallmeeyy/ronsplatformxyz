@@ -31,12 +31,16 @@ class RonkwsApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => ToastProvider()),
         ChangeNotifierProxyProvider<ToastProvider, AuthProvider>(
-          create: (ctx) => AuthProvider(toastProvider: Provider.of<ToastProvider>(ctx, listen: false)),
-          update: (ctx, toast, previous) => previous ?? AuthProvider(toastProvider: toast),
+          create: (ctx) => AuthProvider(
+              toastProvider: Provider.of<ToastProvider>(ctx, listen: false)),
+          update: (ctx, toast, previous) =>
+              previous ?? AuthProvider(toastProvider: toast),
         ),
         ChangeNotifierProxyProvider<ToastProvider, ContentProvider>(
-          create: (ctx) => ContentProvider(toastProvider: Provider.of<ToastProvider>(ctx, listen: false)),
-          update: (ctx, toast, previous) => previous ?? ContentProvider(toastProvider: toast),
+          create: (ctx) => ContentProvider(
+              toastProvider: Provider.of<ToastProvider>(ctx, listen: false)),
+          update: (ctx, toast, previous) =>
+              previous ?? ContentProvider(toastProvider: toast),
         ),
       ],
       child: MaterialApp(
@@ -58,6 +62,15 @@ class MainAppRouter extends StatelessWidget {
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
     final content = Provider.of<ContentProvider>(context);
+
+    if (!auth.isInitialized) {
+      return const Scaffold(
+        backgroundColor: AppTheme.background,
+        body: Center(
+          child: CircularProgressIndicator(color: AppTheme.primaryPurple),
+        ),
+      );
+    }
 
     // Show Cinematic Intro Logo Animation if just logged in / registered
     if (auth.playIntroAnimation) {

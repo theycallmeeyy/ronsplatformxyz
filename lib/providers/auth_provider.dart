@@ -29,13 +29,14 @@ class AuthProvider extends ChangeNotifier {
 
   void setCurrentRoute(String route) {
     _currentRoute = route;
+    _saveCurrentRouteToPrefs();
     notifyListeners();
   }
 
   Future<void> _loadFromPrefs() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      
+
       // Load registered users
       final usersJson = prefs.getString('ronkws_users');
       if (usersJson != null && usersJson.isNotEmpty) {
@@ -47,10 +48,11 @@ class AuthProvider extends ChangeNotifier {
 
       // Load active user session
       final activeUserJson = prefs.getString('ronkws_active_user');
+      final savedRoute = prefs.getString('ronkws_current_route');
       if (activeUserJson != null && activeUserJson.isNotEmpty) {
         final decoded = jsonDecode(activeUserJson);
         _currentUser = UserModel.fromJson(decoded);
-        _currentRoute = 'home';
+        _currentRoute = savedRoute ?? 'home';
       } else {
         _currentUser = null;
         _currentRoute = 'login';
@@ -90,6 +92,15 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> _saveCurrentRouteToPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('ronkws_current_route', _currentRoute);
+    } catch (e) {
+      if (kDebugMode) print('Error saving current route: $e');
+    }
+  }
+
   // Login handler
   bool login(String email, String password) {
     final trimmedEmail = email.trim().toLowerCase();
@@ -98,14 +109,19 @@ class AuthProvider extends ChangeNotifier {
     );
 
     if (foundIndex == -1) {
-      toastProvider.showToast('Invalid email or password. Try user@ronkws.com / password123', ToastType.error);
+      toastProvider.showToast(
+          'Invalid email or password. Try user@ronkws.com / password123',
+          ToastType.error);
       return false;
     }
 
     _currentUser = _users[foundIndex];
+    _currentRoute = 'home';
     _playIntroAnimation = true; // Trigger 4-second cinematic intro
-    toastProvider.showToast('Welcome back, ${_currentUser!.name}!', ToastType.success);
+    toastProvider.showToast(
+        'Welcome back, ${_currentUser!.name}!', ToastType.success);
     _saveActiveUserToPrefs();
+    _saveCurrentRouteToPrefs();
     notifyListeners();
     return true;
   }
@@ -116,7 +132,8 @@ class AuthProvider extends ChangeNotifier {
     final exists = _users.any((u) => u.email.toLowerCase() == trimmedEmail);
 
     if (exists) {
-      toastProvider.showToast('An account with this email already exists', ToastType.error);
+      toastProvider.showToast(
+          'An account with this email already exists', ToastType.error);
       return false;
     }
 
@@ -126,17 +143,20 @@ class AuthProvider extends ChangeNotifier {
       email: trimmedEmail,
       password: password,
       role: 'user',
-      avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=${Uri.encodeComponent(name)}',
+      avatar:
+          'https://api.dicebear.com/7.x/bottts/svg?seed=${Uri.encodeComponent(name)}',
       memberSince: DateTime.now().year.toString(),
       bio: 'New Ronkws Streaming Hub Enthusiast',
     );
 
     _users.add(newUser);
     _currentUser = newUser;
+    _currentRoute = 'home';
     _playIntroAnimation = true; // Trigger logo intro animation
     toastProvider.showToast('Account created successfully!', ToastType.success);
     _saveUsersToPrefs();
     _saveActiveUserToPrefs();
+    _saveCurrentRouteToPrefs();
     notifyListeners();
     return true;
   }
@@ -148,6 +168,7 @@ class AuthProvider extends ChangeNotifier {
     _currentRoute = 'login';
     toastProvider.showToast('Logged out successfully', ToastType.info);
     _saveActiveUserToPrefs();
+    _saveCurrentRouteToPrefs();
     notifyListeners();
   }
 
@@ -189,7 +210,8 @@ class AuthProvider extends ChangeNotifier {
       _users[index] = updatedUser;
     }
 
-    toastProvider.showToast('Password changed successfully!', ToastType.success);
+    toastProvider.showToast(
+        'Password changed successfully!', ToastType.success);
     _saveUsersToPrefs();
     _saveActiveUserToPrefs();
     notifyListeners();
@@ -210,7 +232,8 @@ class AuthProvider extends ChangeNotifier {
         _saveActiveUserToPrefs();
       }
 
-      toastProvider.showToast('Role updated for ${user.name} to $newRole', ToastType.success);
+      toastProvider.showToast(
+          'Role updated for ${user.name} to $newRole', ToastType.success);
       _saveUsersToPrefs();
       notifyListeners();
     }

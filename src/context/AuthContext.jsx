@@ -144,6 +144,7 @@ export function AuthProvider({ children }) {
   // Controls triggering the cinematic startup animation after login
   const [playIntroAnimation, setPlayIntroAnimation] = useState(false);
   const [introSoundPlayedOnce, setIntroSoundPlayedOnce] = useState(false);
+  const introStartedRef = useRef(false);
 
   // Active view/route navigation state
   const [currentRoute, setCurrentRoute] = useState(() => {
@@ -156,7 +157,8 @@ export function AuthProvider({ children }) {
   }, [users]);
 
   const playIntroSound = () => {
-    if (introSoundPlayedOnce) return;
+    if (introSoundPlayedOnce || introStartedRef.current) return;
+    introStartedRef.current = true;
     setIntroSoundPlayedOnce(true);
 
     try {
@@ -173,15 +175,24 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
   // Login handler
   const login = (email, password, rememberMe = false) => {
     const trimmedEmail = email.trim().toLowerCase();
-    const foundUser = users.find(
-      (u) => u.email.toLowerCase() === trimmedEmail && u.password === password
-    );
+    if (!emailRegex.test(trimmedEmail)) {
+      showToast('Please enter a valid email address', 'error');
+      return { success: false, error: 'Invalid email' };
+    }
 
+    const foundUser = users.find((u) => u.email.toLowerCase() === trimmedEmail);
     if (!foundUser) {
-      showToast('Invalid email or password. Try user@ronkws.com / password123', 'error');
+      showToast('Invalid email or password', 'error');
+      return { success: false, error: 'Invalid email or password' };
+    }
+
+    if (foundUser.password !== password) {
+      showToast('Invalid email or password', 'error');
       return { success: false, error: 'Invalid email or password' };
     }
 
@@ -251,6 +262,11 @@ export function AuthProvider({ children }) {
       avatar: serverUser.profile_photo || serverUser.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(serverUser.name || serverUser.email)}`,
       role: serverUser.role || 'user'
     };
+
+    if (!playIntroAnimation) {
+      playIntroSound();
+      setPlayIntroAnimation(true);
+    }
 
     setUser(normalizedUser);
     setUsers((prev) => {
@@ -329,6 +345,7 @@ export function AuthProvider({ children }) {
   const completeIntroAnimation = () => {
     setPlayIntroAnimation(false);
     setCurrentRoute('home');
+    introStartedRef.current = false;
   };
 
   return (

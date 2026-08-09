@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useContent } from '../context/ContentContext';
 import { useAuth } from '../context/AuthContext';
+import { fetchAuthStats, fetchPwaStatus } from '../utils/api';
+import { useInstallPrompt } from '../useInstallPrompt';
 import ContentCard from '../components/ContentCard';
 
 export default function Home() {
@@ -16,8 +18,24 @@ export default function Home() {
   } = useContent();
   const { setCurrentRoute } = useAuth();
 
+  const [totalUsers, setTotalUsers] = useState(null);
+  const [activeUsers, setActiveUsers] = useState(null);
+  const [pwaStatus, setPwaStatus] = useState({
+    secureContext: false,
+    manifestExists: false,
+    serviceWorkerExists: false,
+    installable: false
+  });
+
   const warningUrl = 'https://brave.com/download/';
   const warningLabel = 'Brave';
+
+  const {
+    isInstalled,
+    isIos,
+    promptInstall,
+  } = useInstallPrompt();
+  const [installMessage, setInstallMessage] = useState('');
 
   const categories = [
     'All',
@@ -29,6 +47,39 @@ export default function Home() {
     'Sports',
     'Apps'
   ];
+
+  const loadStats = async () => {
+    try {
+      const result = await fetchAuthStats();
+      if (result?.success && result?.stats) {
+        setTotalUsers(result.stats.totalUsers);
+        setActiveUsers(result.stats.activeUsers);
+      }
+    } catch (error) {
+      console.warn('Failed to fetch user stats:', error);
+    }
+  };
+
+  const loadPwaStatus = async () => {
+    try {
+      const result = await fetchPwaStatus();
+      if (result?.success && result?.status) {
+        setPwaStatus(result.status);
+      }
+    } catch (error) {
+      console.warn('Failed to fetch PWA status:', error);
+    }
+  };
+
+  useEffect(() => {
+    loadStats();
+    loadPwaStatus();
+    const interval = window.setInterval(() => {
+      loadStats();
+      loadPwaStatus();
+    }, 30000);
+    return () => window.clearInterval(interval);
+  }, []);
 
   return (
     <div className="pt-24 md:pt-28 px-5 md:px-12 max-w-7xl mx-auto space-y-8 pb-24">
@@ -45,13 +96,57 @@ export default function Home() {
           <p className="text-sm md:text-base text-zinc-300 font-normal">
             Discover movies, TV shows, anime, manga, live TV, apps, and sports all in one seamless place.
           </p>
-          <div className="pt-2">
+          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
               onClick={() => setCurrentRoute('search')}
               className="bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm py-3 px-8 rounded-full transition-all shadow-[0_4px_20px_rgba(124,58,237,0.4)] hover:shadow-[0_6px_24px_rgba(124,58,237,0.6)] active:scale-95"
             >
               Explore Now
             </button>
+            <button
+              onClick={async () => {
+                if (pwaStatus.installable && !isInstalled) {
+                  const accepted = await promptInstall();
+                  setInstallMessage(accepted ? 'App installed successfully!' : 'Install canceled.');
+                } else if (isIos && !isInstalled) {
+                  setInstallMessage('Open Safari, tap Share, then "Add to Home Screen".');
+                } else {
+                  setInstallMessage('Use your browser menu to install the app to your device.');
+                }
+              }}
+              className="bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm py-3 px-8 rounded-full transition-all shadow-[0_4px_20px_rgba(124,58,237,0.4)] hover:shadow-[0_6px_24px_rgba(124,58,237,0.6)] active:scale-95"
+            >
+              {isInstalled ? 'Installed' : isIos ? 'Install on iOS' : 'Install App'}
+            </button>
+          </div>
+          {installMessage && (
+            <p className="text-xs text-emerald-300 mt-2">{installMessage}</p>
+          )}
+          <div className="mx-auto mt-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 backdrop-blur-sm px-4 py-2 text-xs text-zinc-200 shadow-[0_6px_18px_rgba(0,0,0,0.18)]">
+            <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(16,185,129,0.65)]" />
+            <span className="font-semibold text-white">Live:</span>
+            <span>{activeUsers !== null ? activeUsers : '—'}</span>
+            <span className="mx-2 h-4 w-px bg-white/10" />
+            <span className="font-semibold text-white">Total:</span>
+            <span>{totalUsers !== null ? totalUsers : '—'}</span>
+          </div>
+        </div>
+
+        <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 w-full">
+          <div className="glass-card rounded-2xl p-3 flex flex-col items-center justify-center text-center space-y-2 border border-white/10 bg-[#0f0c1c]/80">
+            <span className="material-symbols-outlined text-purple-400 text-2xl">language</span>
+            <span className="font-extrabold text-lg text-white">15K+</span>
+            <span className="text-[11px] text-zinc-400 uppercase tracking-[0.18em]">Total Sites</span>
+          </div>
+          <div className="glass-card rounded-2xl p-3 flex flex-col items-center justify-center text-center space-y-2 border border-white/10 bg-[#0f0c1c]/80">
+            <span className="material-symbols-outlined text-purple-300 text-2xl">category</span>
+            <span className="font-extrabold text-lg text-white">42</span>
+            <span className="text-[11px] text-zinc-400 uppercase tracking-[0.18em]">Categories</span>
+          </div>
+          <div className="glass-card rounded-2xl p-3 flex flex-col items-center justify-center text-center space-y-2 border border-white/10 bg-[#0f0c1c]/80">
+            <span className="material-symbols-outlined text-indigo-300 text-2xl">public</span>
+            <span className="font-extrabold text-lg text-white">120+</span>
+            <span className="text-[11px] text-zinc-400 uppercase tracking-[0.18em]">Regions</span>
           </div>
         </div>
       </section>
@@ -88,25 +183,6 @@ export default function Home() {
               uBlock Origin
             </a>
           </div>
-        </div>
-      </section>
-
-      {/* Stats Row */}
-      <section className="grid grid-cols-3 gap-4">
-        <div className="glass-card rounded-2xl p-4 flex flex-col items-center justify-center text-center space-y-1 hover:shadow-[0px_8px_24px_rgba(124,58,237,0.2)] transition-all border border-white/10">
-          <span className="material-symbols-outlined text-purple-400 text-3xl mb-1">language</span>
-          <span className="font-extrabold text-xl md:text-2xl text-white">15K+</span>
-          <span className="text-[10px] md:text-xs font-semibold text-zinc-400 uppercase tracking-wider">Total Sites</span>
-        </div>
-        <div className="glass-card rounded-2xl p-4 flex flex-col items-center justify-center text-center space-y-1 hover:shadow-[0px_8px_24px_rgba(124,58,237,0.2)] transition-all border border-white/10">
-          <span className="material-symbols-outlined text-purple-300 text-3xl mb-1">category</span>
-          <span className="font-extrabold text-xl md:text-2xl text-white">42</span>
-          <span className="text-[10px] md:text-xs font-semibold text-zinc-400 uppercase tracking-wider">Categories</span>
-        </div>
-        <div className="glass-card rounded-2xl p-4 flex flex-col items-center justify-center text-center space-y-1 hover:shadow-[0px_8px_24px_rgba(124,58,237,0.2)] transition-all border border-white/10">
-          <span className="material-symbols-outlined text-indigo-300 text-3xl mb-1">public</span>
-          <span className="font-extrabold text-xl md:text-2xl text-white">120+</span>
-          <span className="text-[10px] md:text-xs font-semibold text-zinc-400 uppercase tracking-wider">Regions</span>
         </div>
       </section>
 
@@ -156,11 +232,13 @@ export default function Home() {
       {/* Continue Watching Section */}
       {watchHistory.length > 0 && (
         <section className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <span className="material-symbols-outlined text-purple-400">play_circle</span>
-              Continue Watching
-            </h2>
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-3">
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <span className="material-symbols-outlined text-purple-400">play_circle</span>
+                Continue Watching
+              </h2>
+                </div>
           </div>
           <div className="flex gap-4 overflow-x-auto hide-scrollbar pb-3">
             {watchHistory.map((item) => (

@@ -35,3 +35,19 @@ export async function logoutBackend() {
   });
   return response.json();
 }
+
+export async function fetchAuthStats() {
+  const response = await fetch(`${API_BASE_URL}/api/auth/stats`, {
+    method: 'GET',
+    credentials: 'include'
+  });
+  return response.json();
+}
+
+export async function fetchPwaStatus() {
+  const response = await fetch(`${API_BASE_URL}/api/pwa/status`, {
+    method: 'GET',
+    credentials: 'include'
+  });
+  return response.json();
+}

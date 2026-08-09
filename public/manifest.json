@@ -1,0 +1,21 @@
+{
+  "name": "Ronkws Streaming Hub",
+  "short_name": "Ronkws",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#14121d",
+  "theme_color": "#7c3aed",
+  "description": "Ronkws Streaming Hub - Discover movies, TV shows, anime, manga, live TV, apps, and sports all in one place.",
+  "icons": [
+    {
+      "src": "/logo/paid_apps/moviebox.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo/paid_apps/moviebox.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

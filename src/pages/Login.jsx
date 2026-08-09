@@ -314,7 +314,7 @@ export default function Login() {
               type="submit"
               className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm rounded-[24px] py-3.5 transition-all duration-300 shadow-[0_4px_20px_rgba(124,58,237,0.4)] hover:shadow-[0_6px_28px_rgba(124,58,237,0.6)] active:scale-[0.98] mt-2"
             >
-              {mode === 'login' ? 'Sign In' : 'Create Account'}
+              {mode === 'login' ? 'Log in' : 'Create Account'}
             </button>
           </form>
 

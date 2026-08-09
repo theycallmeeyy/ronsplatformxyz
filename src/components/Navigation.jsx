@@ -158,7 +158,7 @@ export default function Navigation() {
               onClick={() => setCurrentRoute('login')}
               className="bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm px-5 py-2.5 rounded-full shadow-[0_4px_14px_rgba(124,58,237,0.4)] transition-all"
             >
-              Sign In
+              Log in
             </button>
           )}
         </div>
