@@ -7,6 +7,7 @@ export default function Trending() {
   const { items, openItemModal, toggleTrending, toggleRecommended } = useContent();
 
   const trendingItems = items.filter((i) => i.isTrending || i.rank || i.isRecommended);
+  const topTrendingItem = items.find((item) => item.isTrending) || items[0];
 
   return (
     <div className="pt-24 md:pt-28 px-5 md:px-12 max-w-7xl mx-auto space-y-8 pb-24">
@@ -25,8 +26,8 @@ export default function Trending() {
                 Admin Controls Active
               </span>
               <button
-                onClick={() => toggleTrending(trendingItems[0]?.id)}
-                disabled={!trendingItems.length}
+                onClick={() => topTrendingItem && toggleTrending(topTrendingItem.id)}
+                disabled={!topTrendingItem}
                 className="bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs px-4 py-2 rounded-2xl shadow-[0_4px_14px_rgba(124,58,237,0.4)] transition-all disabled:bg-white/10 disabled:text-zinc-400"
               >
                 Toggle Top Trending
