@@ -1,19 +1,39 @@
 import React from 'react';
+import { useAuth } from '../context/AuthContext';
 import { useContent } from '../context/ContentContext';
 
 export default function Trending() {
-  const { items, openItemModal } = useContent();
+  const { isAdmin } = useAuth();
+  const { items, openItemModal, toggleTrending, toggleRecommended } = useContent();
 
-  const trendingItems = items.filter((i) => i.isTrending || i.rank);
+  const trendingItems = items.filter((i) => i.isTrending || i.rank || i.isRecommended);
 
   return (
     <div className="pt-24 md:pt-28 px-5 md:px-12 max-w-7xl mx-auto space-y-8 pb-24">
       {/* Page Title */}
       <section>
-        <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight mb-1">
-          Trending Now
-        </h1>
-        <p className="text-sm text-zinc-400">Discover what everyone is watching today across all platforms.</p>
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight mb-1">
+              Trending Now
+            </h1>
+            <p className="text-sm text-zinc-400">Discover what everyone is watching today across all platforms.</p>
+          </div>
+          {isAdmin && (
+            <div className="flex flex-wrap gap-3 items-center">
+              <span className="text-xs uppercase tracking-[0.24em] text-amber-300 font-semibold bg-amber-500/10 px-3 py-2 rounded-full border border-amber-500/20">
+                Admin Controls Active
+              </span>
+              <button
+                onClick={() => toggleTrending(trendingItems[0]?.id)}
+                disabled={!trendingItems.length}
+                className="bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs px-4 py-2 rounded-2xl shadow-[0_4px_14px_rgba(124,58,237,0.4)] transition-all disabled:bg-white/10 disabled:text-zinc-400"
+              >
+                Toggle Top Trending
+              </button>
+            </div>
+          )}
+        </div>
       </section>
 
       {/* Most Visited Horizontal Carousel */}
@@ -61,12 +81,40 @@ export default function Trending() {
                   {item.description}
                 </p>
 
-                <div className="pt-2 flex items-center gap-2 text-xs font-semibold text-amber-300">
+                <div className="pt-2 flex flex-wrap items-center gap-2 text-xs font-semibold text-amber-300">
                   <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>
                     star
                   </span>
                   {item.rating} • {item.views} Views
                 </div>
+                {item.isRecommended && (
+                  <span className="inline-flex items-center gap-1 uppercase text-[10px] tracking-[0.2em] text-white bg-slate-900/80 px-2 py-1 rounded-full mt-2">
+                    <span className="material-symbols-outlined text-[14px]">thumb_up</span>
+                    Recommended
+                  </span>
+                )}
+                {isAdmin && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        toggleTrending(item.id);
+                      }}
+                      className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white bg-white/10 hover:bg-white/20 px-3 py-2 rounded-full transition-all"
+                    >
+                      {item.isTrending ? 'Untrend' : 'Trend'}
+                    </button>
+                    <button
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        toggleRecommended(item.id);
+                      }}
+                      className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white bg-zinc-800/80 hover:bg-zinc-700 px-3 py-2 rounded-full transition-all"
+                    >
+                      {item.isRecommended ? 'Unrecommend' : 'Recommend'}
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -99,7 +147,7 @@ export default function Trending() {
                 <h4 className="font-bold text-base md:text-lg text-white group-hover:text-purple-300 transition-colors truncate">
                   {item.title}
                 </h4>
-                <div className="flex items-center gap-3 text-xs text-zinc-400 mt-1">
+                <div className="flex flex-wrap items-center gap-3 text-xs text-zinc-400 mt-1">
                   <span className="flex items-center gap-1 text-amber-300 font-semibold">
                     <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>
                       star
@@ -110,10 +158,38 @@ export default function Trending() {
                   <span>{item.category}</span>
                   <span>•</span>
                   <span>{item.views || '1.1M'} views</span>
+                  {item.isRecommended && (
+                    <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.2em] text-white bg-slate-900/80 px-2 py-1 rounded-full">
+                      <span className="material-symbols-outlined text-[14px]">thumb_up</span>
+                      Recommended
+                    </span>
+                  )}
                 </div>
                 <p className="text-xs text-zinc-400 line-clamp-1 mt-1 hidden md:block">
                   {item.description}
                 </p>
+                {isAdmin && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        toggleTrending(item.id);
+                      }}
+                      className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white bg-white/10 hover:bg-white/20 px-3 py-2 rounded-full transition-all"
+                    >
+                      {item.isTrending ? 'Untrend' : 'Trend'}
+                    </button>
+                    <button
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        toggleRecommended(item.id);
+                      }}
+                      className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white bg-zinc-800/80 hover:bg-zinc-700 px-3 py-2 rounded-full transition-all"
+                    >
+                      {item.isRecommended ? 'Unrecommend' : 'Recommend'}
+                    </button>
+                  </div>
+                )}
               </div>
 
               <button className="p-2 text-purple-300 group-hover:text-white transition-colors">

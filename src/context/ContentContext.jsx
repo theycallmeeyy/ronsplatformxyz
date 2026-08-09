@@ -40,10 +40,7 @@ export function ContentProvider({ children }) {
     if (saved) {
       try { return JSON.parse(saved); } catch (e) { console.error(e); }
     }
-    return [
-      { id: 'mov-101', title: 'Neon Shadows: 2145', progress: 65, category: 'Movies', bannerUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80' },
-      { id: 'tv-201', title: 'Starlight Protocol', progress: 40, category: 'TV Shows', bannerUrl: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80' }
-    ];
+    return [];
   });
 
   // Currently active filter & search states
@@ -115,7 +112,9 @@ export function ContentProvider({ children }) {
       id: `item-${Date.now()}`,
       views: '0',
       rating: parseFloat(newContent.rating) || 4.5,
-      year: newContent.year || new Date().getFullYear().toString()
+      year: newContent.year || new Date().getFullYear().toString(),
+      isTrending: false,
+      isRecommended: false
     };
     setItems((prev) => [item, ...prev]);
     showToast(`Added "${item.title}" to catalog!`, 'success');
@@ -126,6 +125,40 @@ export function ContentProvider({ children }) {
       prev.map((item) => (item.id === id ? { ...item, ...updatedFields } : item))
     );
     showToast(`Updated content successfully!`, 'success');
+  };
+
+  const toggleTrending = (itemId) => {
+    let title = 'Item';
+    let nextTrending = false;
+    setItems((prev) =>
+      prev.map((item) => {
+        if (item.id !== itemId) return item;
+        title = item.title || title;
+        nextTrending = !item.isTrending;
+        return { ...item, isTrending: nextTrending };
+      })
+    );
+    showToast(
+      `${title} ${nextTrending ? 'marked as' : 'removed from'} trending`,
+      'success'
+    );
+  };
+
+  const toggleRecommended = (itemId) => {
+    let title = 'Item';
+    let nextRecommended = false;
+    setItems((prev) =>
+      prev.map((item) => {
+        if (item.id !== itemId) return item;
+        title = item.title || title;
+        nextRecommended = !item.isRecommended;
+        return { ...item, isRecommended: nextRecommended };
+      })
+    );
+    showToast(
+      `${title} ${nextRecommended ? 'marked as' : 'removed from'} recommendations`,
+      'success'
+    );
   };
 
   const deleteContent = (id) => {
