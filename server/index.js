@@ -12,7 +12,9 @@ import {
   getUsers,
   upsertGoogleUser,
   getMeta,
-  incrementVisitorOffset
+  incrementVisitorOffset,
+  getRatings,
+  addOrUpdateRating
 } from './db.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -211,6 +213,82 @@ app.get('/api/pwa/status', async (req, res) => {
   } catch (error) {
     console.error('Failed to evaluate PWA status:', error);
     return res.status(500).json({ success: false, error: 'Unable to evaluate PWA status' });
+  }
+});
+
+// Ratings endpoints
+app.get('/api/ratings', async (req, res) => {
+  try {
+    const { siteId } = req.query || {};
+    const data = await getRatings(siteId);
+    // determine a user identifier: authenticated user id or guest id cookie
+    let userScore = null;
+    const token = req.cookies.ronkws_session;
+    const guestCookieName = 'ronkws_guest';
+    let uid = null;
+    if (token) {
+      try {
+        const payload = jwt.verify(token, JWT_SECRET);
+        uid = payload.sub;
+      } catch (e) {
+        // ignore invalid token
+      }
+    }
+    if (!uid) {
+      uid = req.cookies[guestCookieName] || null;
+    }
+    const entry = siteId ? (data || {}) : null;
+    if (uid && entry) {
+      userScore = entry?.byUser?.[uid] ?? null;
+    }
+
+    return res.json({ success: true, ratings: data, userScore });
+  } catch (error) {
+    console.error('Failed to fetch ratings:', error);
+    return res.status(500).json({ success: false, error: 'Unable to load ratings' });
+  }
+});
+
+app.post('/api/ratings', async (req, res) => {
+  try {
+    // Allow authenticated users or persistent guest cookie users to rate
+    const token = req.cookies.ronkws_session;
+    const guestCookieName = 'ronkws_guest';
+    let userId = null;
+    if (token) {
+      try {
+        const payload = jwt.verify(token, JWT_SECRET);
+        userId = payload.sub;
+      } catch (err) {
+        // invalid token - ignore and fall back to guest
+      }
+    }
+
+    if (!userId) {
+      userId = req.cookies[guestCookieName];
+      if (!userId) {
+        userId = `guest-${Date.now()}-${Math.random().toString(36).slice(2,9)}`;
+        // set a long-lived guest cookie
+        res.cookie(guestCookieName, userId, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 10 * 365 * 24 * 60 * 60 * 1000
+        });
+      }
+    }
+
+    const { siteId, score } = req.body || {};
+    if (!siteId || typeof score === 'undefined') {
+      return res.status(400).json({ success: false, error: 'Missing siteId or score' });
+    }
+    const numeric = Math.max(1, Math.min(5, Number(score)));
+    const entry = await addOrUpdateRating(siteId, userId, numeric);
+    const userScore = entry?.byUser?.[userId] ?? null;
+    return res.json({ success: true, rating: entry, userScore });
+  } catch (error) {
+    console.error('Failed to submit rating:', error);
+    return res.status(500).json({ success: false, error: 'Unable to submit rating' });
   }
 });
 

@@ -115,3 +115,33 @@ export async function getUserById(id) {
   const users = await getUsers();
   return users.find((u) => u.id === id);
 }
+
+export async function getRatings(siteId) {
+  const db = await loadDb();
+  db.meta = db.meta || { visitorOffset: 534 };
+  const ratings = db.meta.ratings || {};
+  if (siteId) return ratings[siteId] || { totalScore: 0, count: 0, byUser: {} };
+  return ratings;
+}
+
+export async function addOrUpdateRating(siteId, userId, score) {
+  const db = await loadDb();
+  db.meta = db.meta || { visitorOffset: 534 };
+  db.meta.ratings = db.meta.ratings || {};
+  const entry = db.meta.ratings[siteId] || { totalScore: 0, count: 0, byUser: {} };
+
+  const prev = entry.byUser && entry.byUser[userId];
+  if (prev !== undefined) {
+    // adjust totals
+    entry.totalScore = Math.max(0, Number(entry.totalScore) - Number(prev) + Number(score));
+  } else {
+    entry.totalScore = Number(entry.totalScore) + Number(score);
+    entry.count = Number(entry.count || 0) + 1;
+  }
+  entry.byUser = entry.byUser || {};
+  entry.byUser[userId] = Number(score);
+
+  db.meta.ratings[siteId] = entry;
+  await saveDb(db);
+  return entry;
+}

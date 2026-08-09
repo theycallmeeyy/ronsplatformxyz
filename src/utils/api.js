@@ -54,6 +54,22 @@ export async function trackVisit(count = 1) {
   return response.json();
 }
 
+export async function fetchRatings(siteId) {
+  const url = siteId ? `${API_BASE_URL}/api/ratings?siteId=${encodeURIComponent(siteId)}` : `${API_BASE_URL}/api/ratings`;
+  const response = await fetch(url, { method: 'GET', credentials: 'include' });
+  return response.json();
+}
+
+export async function submitRating(siteId, score) {
+  const response = await fetch(`${API_BASE_URL}/api/ratings`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ siteId, score })
+  });
+  return response.json();
+}
+
 export async function fetchPwaStatus() {
   const response = await fetch(`${API_BASE_URL}/api/pwa/status`, {
     method: 'GET',
