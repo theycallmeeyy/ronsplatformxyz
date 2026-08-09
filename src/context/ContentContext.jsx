@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { INITIAL_CONTENT } from '../data/initialData';
+import { TBCPL_CONTENT } from '../data/tbcplContent';
 import { useToast } from './ToastContext';
 
 const ContentContext = createContext(null);
@@ -13,7 +14,7 @@ export function ContentProvider({ children }) {
     if (saved) {
       try { return JSON.parse(saved); } catch (e) { console.error(e); }
     }
-    return INITIAL_CONTENT;
+    return TBCPL_CONTENT;
   });
 
   // Favorites state (array of item IDs)

@@ -252,6 +252,15 @@ app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'RonKws auth server is running' });
 });
 
+const frontendDistPath = path.resolve(__dirname, '../dist');
+
+if (fs.existsSync(frontendDistPath)) {
+  app.use(express.static(frontendDistPath));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(frontendDistPath, 'index.html'));
+  });
+}
+
 if (process.env.VERCEL !== '1') {
   app.listen(PORT, () => {
     console.log(`Auth server listening on http://localhost:${PORT}`);
