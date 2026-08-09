@@ -117,7 +117,7 @@ export default function ContentCard({ item }) {
                 );
               })}
             </div>
-            <div className="text-xs text-zinc-400 ml-2">{rating.count ? rating.avg.toFixed(1) : '—'} ({rating.count})</div>
+            <div className="text-xs text-zinc-400 ml-2">{rating.count ? rating.avg.toFixed(1) : '0'} ({rating.count || 0})</div>
           </div>
         </div>
 
