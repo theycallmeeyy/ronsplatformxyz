@@ -10,7 +10,9 @@ import { OAuth2Client } from 'google-auth-library';
 import {
   getUserById,
   getUsers,
-  upsertGoogleUser
+  upsertGoogleUser,
+  getMeta,
+  incrementVisitorOffset
 } from './db.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -116,10 +118,7 @@ app.post('/api/auth/google', async (req, res) => {
   }
 
   try {
-    const ticket = await googleClient.verifyIdToken({
-      idToken: credential,
-      audience: GOOGLE_CLIENT_ID
-    });
+    const ticket = await googleClient.verifyIdToken({ idToken: credential, audience: GOOGLE_CLIENT_ID });
     const payload = ticket.getPayload();
     if (!payload) {
       return res.status(400).json({ success: false, error: 'Invalid Google ID token' });
@@ -130,12 +129,18 @@ app.post('/api/auth/google', async (req, res) => {
     const name = payload.name || 'Google User';
     const profilePhoto = payload.picture || '';
 
-    const user = await upsertGoogleUser({
-      googleUid,
-      email,
-      name,
-      profilePhoto
-    });
+    const upsertResult = await upsertGoogleUser({ googleUid, email, name, profilePhoto });
+    const user = upsertResult?.user || null;
+    const wasCreated = Boolean(upsertResult?.created);
+
+    // Increment persistent visitor offset only when a new authenticated user was created
+    if (wasCreated) {
+      try {
+        await incrementVisitorOffset(1);
+      } catch (err) {
+        console.warn('Failed to increment visitor offset for new user:', err);
+      }
+    }
 
     const { expiresAt } = setSessionCookie(res, user.id);
 
@@ -149,16 +154,37 @@ app.post('/api/auth/google', async (req, res) => {
 app.get('/api/auth/stats', async (req, res) => {
   try {
     const users = await getUsers();
+    const meta = await getMeta();
+    const offset = Number(meta?.visitorOffset) || 0;
     return res.json({
       success: true,
       stats: {
-        totalUsers: users.length,
+        totalUsers: users.length + offset,
         activeUsers: getActiveUserCount()
       }
     });
   } catch (error) {
     console.error('Failed to fetch auth stats:', error);
     return res.status(500).json({ success: false, error: 'Unable to load auth stats' });
+  }
+});
+
+// Track anonymous visits / joins — increments the persistent visitor offset
+app.post('/api/track/visit', async (req, res) => {
+  try {
+    const { count = 1 } = req.body || {};
+    const meta = await incrementVisitorOffset(Number(count));
+    const users = await getUsers();
+    return res.json({
+      success: true,
+      stats: {
+        totalUsers: users.length + (Number(meta?.visitorOffset) || 0),
+        visitorOffset: Number(meta?.visitorOffset) || 0
+      }
+    });
+  } catch (error) {
+    console.error('Failed to track visit:', error);
+    return res.status(500).json({ success: false, error: 'Unable to track visit' });
   }
 });
 

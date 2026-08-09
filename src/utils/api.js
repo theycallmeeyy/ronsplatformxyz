@@ -44,6 +44,16 @@ export async function fetchAuthStats() {
   return response.json();
 }
 
+export async function trackVisit(count = 1) {
+  const response = await fetch(`${API_BASE_URL}/api/track/visit`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ count })
+  });
+  return response.json();
+}
+
 export async function fetchPwaStatus() {
   const response = await fetch(`${API_BASE_URL}/api/pwa/status`, {
     method: 'GET',

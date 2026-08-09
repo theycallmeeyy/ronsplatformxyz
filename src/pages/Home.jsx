@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useContent } from '../context/ContentContext';
 import { useAuth } from '../context/AuthContext';
-import { fetchAuthStats, fetchPwaStatus } from '../utils/api';
+import { fetchAuthStats, fetchPwaStatus, trackVisit } from '../utils/api';
 import { useInstallPrompt } from '../useInstallPrompt';
 import ContentCard from '../components/ContentCard';
 
@@ -29,6 +29,19 @@ export default function Home() {
 
   const warningUrl = 'https://brave.com/download/';
   const warningLabel = 'Brave';
+
+  const formatExact = (count) => {
+    const numeric = Number(count) || 0;
+    return numeric.toLocaleString();
+  };
+
+  const formatRounded = (count) => {
+    const numeric = Number(count) || 0;
+    if (numeric === 0) return '0';
+    if (numeric < 1000) return `${numeric}`;
+    if (numeric < 10000) return `~${(numeric / 1000).toFixed(1)}K`;
+    return `~${Math.round(numeric / 1000)}K`;
+  };
 
   const {
     isInstalled,
@@ -72,8 +85,18 @@ export default function Home() {
   };
 
   useEffect(() => {
-    loadStats();
-    loadPwaStatus();
+    // Track a single visit (increments the persistent visitor offset), then load stats
+    (async () => {
+      try {
+        await trackVisit(1);
+      } catch (err) {
+        // tracking failure shouldn't block stats
+        console.warn('visit tracking failed', err);
+      }
+      loadStats();
+      loadPwaStatus();
+    })();
+
     const interval = window.setInterval(() => {
       loadStats();
       loadPwaStatus();
@@ -123,12 +146,12 @@ export default function Home() {
             <p className="text-xs text-emerald-300 mt-2">{installMessage}</p>
           )}
           <div className="mx-auto mt-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 backdrop-blur-sm px-4 py-2 text-xs text-zinc-200 shadow-[0_6px_18px_rgba(0,0,0,0.18)]">
-            <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(16,185,129,0.65)]" />
-            <span className="font-semibold text-white">Live:</span>
-            <span>{activeUsers !== null ? activeUsers : '—'}</span>
-            <span className="mx-2 h-4 w-px bg-white/10" />
-            <span className="font-semibold text-white">Total:</span>
-            <span>{totalUsers !== null ? totalUsers : '—'}</span>
+            <span className="relative inline-flex h-2.5 w-2.5">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-70 animate-ping" />
+              <span className="relative inline-flex rounded-full bg-emerald-400 h-2.5 w-2.5 shadow-[0_0_6px_rgba(16,185,129,0.65)]" />
+            </span>
+            <span className="font-semibold text-white">Detected users:</span>
+            <span>{formatExact(totalUsers)}</span>
           </div>
         </div>
 
@@ -229,45 +252,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Continue Watching Section */}
-      {watchHistory.length > 0 && (
-        <section className="space-y-3">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div className="flex items-center gap-3">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <span className="material-symbols-outlined text-purple-400">play_circle</span>
-                Continue Watching
-              </h2>
-                </div>
-          </div>
-          <div className="flex gap-4 overflow-x-auto hide-scrollbar pb-3">
-            {watchHistory.map((item) => (
-              <div
-                key={item.id}
-                onClick={() => {
-                  const fullItem = filteredItems.find((i) => i.id === item.id);
-                  if (fullItem) openItemModal(fullItem);
-                }}
-                className="shrink-0 w-64 glass-card rounded-2xl p-3 border border-white/10 hover:border-purple-500/40 cursor-pointer transition-all group"
-              >
-                <div className="h-32 rounded-xl overflow-hidden relative mb-2 bg-zinc-900">
-                  <img src={item.bannerUrl} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span className="material-symbols-outlined text-4xl text-white">play_arrow</span>
-                  </div>
-                </div>
-                <h4 className="font-bold text-sm text-white truncate">{item.title}</h4>
-                <div className="w-full bg-zinc-800 h-1.5 rounded-full overflow-hidden mt-2">
-                  <div
-                    className="bg-purple-500 h-full rounded-full transition-all"
-                    style={{ width: `${item.progress}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
 
       {/* Main Content Grid */}
       <section className="space-y-4">

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useContent } from '../context/ContentContext';
 
 const BADWARE_PATTERNS = [
@@ -62,6 +62,22 @@ export default function ContentModal() {
   const externalUrl = activeModalItem.url || '';
   const safety = useMemo(() => assessUrlSafety(externalUrl), [externalUrl]);
 
+  useEffect(() => {
+    if (!activeModalItem) return;
+    if (!externalUrl) {
+      setShowExternalFrame(false);
+      setBlockedUrl(false);
+      return;
+    }
+    if (safety.blocked) {
+      setBlockedUrl(true);
+      setShowExternalFrame(false);
+      return;
+    }
+    setBlockedUrl(false);
+    setShowExternalFrame(true);
+  }, [activeModalItem, externalUrl, safety]);
+
   const openInAppStream = () => {
     if (!externalUrl) return;
     if (safety.blocked) {
@@ -71,6 +87,31 @@ export default function ContentModal() {
     }
     setBlockedUrl(false);
     setShowExternalFrame(true);
+  };
+
+  const renderStreamFrame = () => {
+    if (!externalUrl) return null;
+    if (safety.blocked) {
+      return (
+        <div className="flex flex-col items-center justify-center text-center p-8 space-y-4">
+          <span className="material-symbols-outlined text-6xl text-rose-400">block</span>
+          <p className="text-sm font-semibold text-zinc-300">This provider has been blocked</p>
+          <p className="text-xs text-zinc-400 max-w-lg">
+            The selected link contains patterns that may be malicious or unwanted. Ronkws will not open it inside the app.
+          </p>
+        </div>
+      );
+    }
+    return (
+      <iframe
+        src={externalUrl}
+        title={activeModalItem.title}
+        className="w-full h-full border-none"
+        sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock allow-popups"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+      />
+    );
   };
 
   return (
@@ -98,14 +139,7 @@ export default function ContentModal() {
         <div className="relative w-full aspect-video bg-black flex items-center justify-center overflow-hidden">
           {activeModalItem.embedUrl || showExternalFrame ? (
             <div className="relative w-full h-full">
-              <iframe
-                src={showExternalFrame ? externalUrl : activeModalItem.embedUrl}
-                title={activeModalItem.title}
-                className="w-full h-full border-none"
-                sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock allow-popups"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
+              {renderStreamFrame()}
               <div className="absolute left-4 top-4 flex flex-col gap-2 rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-left backdrop-blur-md shadow-[0_12px_32px_rgba(0,0,0,0.4)]">
                 <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-[10px] uppercase tracking-[0.24em] text-emerald-300">
                   <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
@@ -122,17 +156,10 @@ export default function ContentModal() {
               <span className="material-symbols-outlined text-6xl text-purple-400 mb-3 animate-pulse">
                 play_circle
               </span>
-              <p className="text-sm font-semibold text-zinc-300">Live Streaming Ready</p>
-              <button
-                type="button"
-                onClick={openInAppStream}
-                className="mt-4 bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold px-5 py-2.5 rounded-full transition-all"
-              >
-                Open Stream Inside Ronkws
-              </button>
+              <p className="text-sm font-semibold text-zinc-300">Preparing your in-app stream</p>
               <div className="rounded-2xl border border-white/10 bg-white/5 p-3 text-left text-xs text-zinc-300">
-                <p className="font-semibold text-white">Popup & Ad Protection</p>
-                <p className="mt-1">This app uses an in-app browser frame with ad/popup blocking rules enabled.</p>
+                <p className="font-semibold text-white">This item will open inside Ronkws automatically.</p>
+                <p className="mt-1">If the provider link is blocked, the app will notify you instead of opening an external browser.</p>
               </div>
               {blockedUrl && (
                 <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-left text-sm text-rose-100">

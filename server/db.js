@@ -11,7 +11,7 @@ async function loadDb() {
     return JSON.parse(content);
   } catch (error) {
     if (error.code === 'ENOENT') {
-      return { users: [] };
+      return { users: [], meta: { visitorOffset: 534 } };
     }
     throw error;
   }
@@ -24,6 +24,19 @@ async function saveDb(db) {
 export async function getUsers() {
   const db = await loadDb();
   return Array.isArray(db.users) ? db.users : [];
+}
+
+export async function getMeta() {
+  const db = await loadDb();
+  return db.meta || { visitorOffset: 534 };
+}
+
+export async function incrementVisitorOffset(by = 1) {
+  const db = await loadDb();
+  db.meta = db.meta || { visitorOffset: 534 };
+  db.meta.visitorOffset = (Number(db.meta.visitorOffset) || 0) + Number(by || 1);
+  await saveDb(db);
+  return db.meta;
 }
 
 export async function findUserByEmail(email) {
@@ -60,17 +73,18 @@ export async function upsertGoogleUser({ googleUid, email, name, profilePhoto })
   const now = new Date().toISOString();
 
   if (existingGoogleUser) {
-    return updateUser(existingGoogleUser.id, {
+    const updated = await updateUser(existingGoogleUser.id, {
       email,
       name,
       profile_photo: profilePhoto,
       updated_at: now,
       last_login: now
     });
+    return { user: updated, created: false };
   }
 
   if (existingEmailUser) {
-    return updateUser(existingEmailUser.id, {
+    const updated = await updateUser(existingEmailUser.id, {
       google_uid: googleUid,
       provider: 'google',
       name,
@@ -78,6 +92,7 @@ export async function upsertGoogleUser({ googleUid, email, name, profilePhoto })
       updated_at: now,
       last_login: now
     });
+    return { user: updated, created: false };
   }
 
   const newUser = {
@@ -92,7 +107,8 @@ export async function upsertGoogleUser({ googleUid, email, name, profilePhoto })
     last_login: now
   };
 
-  return createUser(newUser);
+  const createdUser = await createUser(newUser);
+  return { user: createdUser, created: true };
 }
 
 export async function getUserById(id) {

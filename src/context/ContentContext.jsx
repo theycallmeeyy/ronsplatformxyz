@@ -1,18 +1,26 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import { INITIAL_CONTENT } from '../data/initialData';
 import { TBCPL_CONTENT } from '../data/tbcplContent';
 import { useToast } from './ToastContext';
 
 const ContentContext = createContext(null);
+const CATALOG_VERSION = 2;
+const CATALOG_STORAGE_KEY = 'ronkws_catalog_v2';
 
 export function ContentProvider({ children }) {
   const { showToast } = useToast();
 
   // Content items state (persisted in localStorage)
   const [items, setItems] = useState(() => {
-    const saved = localStorage.getItem('ronkws_catalog');
+    const saved = localStorage.getItem(CATALOG_STORAGE_KEY);
     if (saved) {
-      try { return JSON.parse(saved); } catch (e) { console.error(e); }
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed?.version === CATALOG_VERSION && Array.isArray(parsed.data)) {
+          return parsed.data;
+        }
+      } catch (e) {
+        console.error(e);
+      }
     }
     return TBCPL_CONTENT;
   });
@@ -48,7 +56,10 @@ export function ContentProvider({ children }) {
 
   // Save to localStorage
   useEffect(() => {
-    localStorage.setItem('ronkws_catalog', JSON.stringify(items));
+    localStorage.setItem(CATALOG_STORAGE_KEY, JSON.stringify({
+      version: CATALOG_VERSION,
+      data: items
+    }));
   }, [items]);
 
   useEffect(() => {
