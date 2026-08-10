@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useContent } from '../context/ContentContext';
 import { useAuth } from '../context/AuthContext';
 import { fetchAuthStats, fetchPwaStatus, trackVisit } from '../utils/api';
+import { TBCPL_CONTENT } from '../data/tbcplContent';
 import { useInstallPrompt } from '../useInstallPrompt';
 import ContentCard from '../components/ContentCard';
 
@@ -20,6 +21,7 @@ export default function Home() {
 
   const [totalUsers, setTotalUsers] = useState(null);
   const [activeUsers, setActiveUsers] = useState(null);
+  const [simulatedUsers, setSimulatedUsers] = useState(null);
   const [pwaStatus, setPwaStatus] = useState({
     secureContext: false,
     manifestExists: false,
@@ -101,7 +103,19 @@ export default function Home() {
       loadStats();
       loadPwaStatus();
     }, 30000);
-    return () => window.clearInterval(interval);
+    // Simulation: start at 1,532 and each minute increment by 10 and decrement by 4 (net +6)
+    const SIM_START = 1532;
+    const JOIN_PER_MIN = 10;
+    const LEAVE_PER_MIN = 4;
+    setSimulatedUsers(SIM_START);
+    const simInterval = window.setInterval(() => {
+      setSimulatedUsers((prev) => (Number(prev) || 0) + JOIN_PER_MIN - LEAVE_PER_MIN);
+    }, 60 * 1000);
+
+    return () => {
+      window.clearInterval(interval);
+      window.clearInterval(simInterval);
+    };
   }, []);
 
   return (
@@ -151,14 +165,14 @@ export default function Home() {
               <span className="relative inline-flex rounded-full bg-emerald-400 h-2.5 w-2.5 shadow-[0_0_6px_rgba(16,185,129,0.65)]" />
             </span>
             <span className="font-semibold text-white">Detected users:</span>
-            <span>{formatExact(totalUsers)}</span>
+            <span>{formatExact(simulatedUsers !== null ? simulatedUsers : totalUsers)}</span>
           </div>
         </div>
 
         <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 w-full">
           <div className="glass-card rounded-2xl p-3 flex flex-col items-center justify-center text-center space-y-2 border border-white/10 bg-[#0f0c1c]/80">
             <span className="material-symbols-outlined text-purple-400 text-2xl">language</span>
-            <span className="font-extrabold text-lg text-white">15K+</span>
+            <span className="font-extrabold text-lg text-white">{formatExact(TBCPL_CONTENT.length)}</span>
             <span className="text-[11px] text-zinc-400 uppercase tracking-[0.18em]">Total Sites</span>
           </div>
           <div className="glass-card rounded-2xl p-3 flex flex-col items-center justify-center text-center space-y-2 border border-white/10 bg-[#0f0c1c]/80">
