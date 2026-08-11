@@ -2,6 +2,16 @@ import React, { createContext, useContext, useState, useEffect, useRef } from 'r
 import { INITIAL_USERS } from '../data/initialData';
 import { useToast } from './ToastContext';
 import { fetchCurrentUser, logoutBackend, refreshSession } from '../utils/api';
+import {
+  browserLocalPersistence,
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+  setPersistence,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  signOut as firebaseSignOut
+} from 'firebase/auth';
+import { firebaseAuth, firebaseGoogleProvider, isFirebaseConfigured } from '../firebaseConfig';
 
 const AuthContext = createContext(null);
 
@@ -16,10 +26,14 @@ export function AuthProvider({ children }) {
       try {
         const parsed = JSON.parse(saved);
         const normalized = parsed.map((u) => {
+          const baseUser = {
+            ...u,
+            blocked: u.blocked ?? false
+          };
           if (u.id === defaultAdmin.id || u.email.toLowerCase() === defaultAdmin.email) {
-            return { ...defaultAdmin };
+            return { ...defaultAdmin, blocked: baseUser.blocked };
           }
-          return u;
+          return baseUser;
         });
 
         const hasAdmin = normalized.some(
@@ -56,6 +70,7 @@ export function AuthProvider({ children }) {
     };
   });
   const [authLoaded, setAuthLoaded] = useState(false);
+  const [firebaseReady, setFirebaseReady] = useState(false);
   const refreshTimeout = useRef(null);
 
   useEffect(() => {
@@ -98,6 +113,76 @@ export function AuthProvider({ children }) {
       }
     }, delay);
   };
+
+  const resolveFirebaseUser = async (fbUser) => {
+    if (!fbUser || !fbUser.email) return null;
+
+    const email = fbUser.email.toLowerCase();
+    const existing = usersRef.current.find((u) => u.email.toLowerCase() === email);
+    const normalizedUser = {
+      id: existing?.id || `usr-${Date.now()}`,
+      name: fbUser.displayName || existing?.name || email.split('@')[0],
+      email,
+      avatar:
+        existing?.avatar || fbUser.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(email)}`,
+      provider: 'firebase',
+      role: existing?.role || 'user',
+      blocked: existing?.blocked || false,
+      memberSince: existing?.memberSince || new Date().getFullYear().toString(),
+      bio: existing?.bio || 'Firebase authenticated streamer'
+    };
+
+    if (!existing) {
+      setUsers((prev) => {
+        const next = [...prev, normalizedUser];
+        localStorage.setItem('ronkws_users', JSON.stringify(next));
+        return next;
+      });
+    } else if (existing.name !== normalizedUser.name || existing.avatar !== normalizedUser.avatar) {
+      setUsers((prev) => prev.map((u) => (u.email.toLowerCase() === email ? { ...u, ...normalizedUser } : u)));
+    }
+
+    return normalizedUser;
+  };
+
+  useEffect(() => {
+    if (!isFirebaseConfigured || !firebaseAuth) {
+      setFirebaseReady(false);
+      return;
+    }
+
+    let unsubscribe = null;
+    setPersistence(firebaseAuth, browserLocalPersistence)
+      .then(() => {
+        unsubscribe = onAuthStateChanged(firebaseAuth, async (fbUser) => {
+          setFirebaseReady(true);
+          if (!fbUser) return;
+
+          const appUser = await resolveFirebaseUser(fbUser);
+          if (appUser?.blocked) {
+            showToast('This account has been blocked by an administrator.', 'error');
+            await firebaseSignOut(firebaseAuth);
+            setUser(null);
+            return;
+          }
+
+          if (appUser) {
+            setUser(appUser);
+            setCurrentRoute('home');
+          }
+        });
+      })
+      .catch((err) => {
+        console.warn('Firebase persistence failed:', err);
+        setFirebaseReady(false);
+      });
+
+    return () => {
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     async function initializeAuth() {
@@ -144,6 +229,11 @@ export function AuthProvider({ children }) {
   // Controls triggering the cinematic startup animation after login
   const [playIntroAnimation, setPlayIntroAnimation] = useState(false);
   const [introSoundPlayedOnce, setIntroSoundPlayedOnce] = useState(false);
+
+  const usersRef = useRef(users);
+  useEffect(() => {
+    usersRef.current = users;
+  }, [users]);
   const introStartedRef = useRef(false);
 
   // Active view/route navigation state
@@ -177,18 +267,86 @@ export function AuthProvider({ children }) {
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+  const firebaseEmailLogin = async (email, password) => {
+    if (!firebaseAuth) {
+      return { success: false, error: 'Firebase is not configured.' };
+    }
+    try {
+      const credential = await signInWithEmailAndPassword(firebaseAuth, email, password);
+      const appUser = await resolveFirebaseUser(credential.user);
+      if (!appUser) {
+        return { success: false, error: 'Unable to resolve Firebase user.' };
+      }
+      if (appUser.blocked) {
+        await firebaseSignOut(firebaseAuth);
+        return { success: false, error: 'This account has been blocked by an administrator.' };
+      }
+      setUser(appUser);
+      setCurrentRoute('home');
+      return { success: true };
+    } catch (error) {
+      console.error('Firebase email login failed:', error);
+      return { success: false, error: 'Invalid email or password.' };
+    }
+  };
+
+  const firebaseEmailSignup = async (name, email, password) => {
+    if (!firebaseAuth) {
+      return { success: false, error: 'Firebase is not configured.' };
+    }
+    try {
+      const trimmedEmail = email.trim().toLowerCase();
+      const credential = await createUserWithEmailAndPassword(firebaseAuth, trimmedEmail, password);
+      const appUser = await resolveFirebaseUser(credential.user);
+      if (!appUser) {
+        return { success: false, error: 'Unable to create Firebase account.' };
+      }
+      setUser(appUser);
+      setCurrentRoute('home');
+      return { success: true };
+    } catch (error) {
+      console.error('Firebase signup failed:', error);
+      if (error?.code === 'auth/email-already-in-use') {
+        return { success: false, error: 'An account with this email already exists.' };
+      }
+      return { success: false, error: 'Unable to create account. Please try again.' };
+    }
+  };
+
   // Login handler
-  const login = (email, password, rememberMe = false) => {
+  const login = async (email, password, rememberMe = false) => {
     const trimmedEmail = email.trim().toLowerCase();
     if (!emailRegex.test(trimmedEmail)) {
       showToast('Please enter a valid email address', 'error');
       return { success: false, error: 'Invalid email' };
     }
 
+    if (isFirebaseConfigured && firebaseAuth) {
+      const firebaseResult = await firebaseEmailLogin(trimmedEmail, password);
+      if (!firebaseResult.success) {
+        showToast(firebaseResult.error || 'Login failed.', 'error');
+        return firebaseResult;
+      }
+      if (rememberMe) {
+        localStorage.setItem('ronkws_remembered_user', trimmedEmail);
+      } else {
+        localStorage.removeItem('ronkws_remembered_user');
+      }
+      playIntroSound();
+      setPlayIntroAnimation(true); // Trigger 4-second logo intro
+      showToast(`Welcome back, ${trimmedEmail}!`, 'success');
+      return firebaseResult;
+    }
+
     const foundUser = users.find((u) => u.email.toLowerCase() === trimmedEmail);
     if (!foundUser) {
       showToast('Invalid email or password', 'error');
       return { success: false, error: 'Invalid email or password' };
+    }
+
+    if (foundUser.blocked) {
+      showToast('This account has been blocked by an administrator.', 'error');
+      return { success: false, error: 'Blocked account' };
     }
 
     if (foundUser.password !== password) {
@@ -209,8 +367,20 @@ export function AuthProvider({ children }) {
   };
 
   // Sign up handler
-  const signup = (name, email, password) => {
+  const signup = async (name, email, password) => {
     const trimmedEmail = email.trim().toLowerCase();
+    if (isFirebaseConfigured && firebaseAuth) {
+      const firebaseResult = await firebaseEmailSignup(name, trimmedEmail, password);
+      if (!firebaseResult.success) {
+        showToast(firebaseResult.error || 'Unable to create account.', 'error');
+        return firebaseResult;
+      }
+      playIntroSound();
+      setPlayIntroAnimation(true);
+      showToast('Account created successfully!', 'success');
+      return firebaseResult;
+    }
+
     const exists = users.some((u) => u.email.toLowerCase() === trimmedEmail);
 
     if (exists) {
@@ -224,6 +394,7 @@ export function AuthProvider({ children }) {
       email: trimmedEmail,
       password: password,
       role: 'user',
+      blocked: false,
       avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name)}`,
       memberSince: new Date().getFullYear().toString(),
       bio: 'New Ronkws Streaming Hub Enthusiast'
@@ -240,6 +411,9 @@ export function AuthProvider({ children }) {
   // Logout handler
   const logout = async () => {
     try {
+      if (firebaseAuth && firebaseReady) {
+        await firebaseSignOut(firebaseAuth);
+      }
       await logoutBackend();
     } catch (error) {
       console.warn('Logout backend failed, clearing local session anyway:', error);
@@ -259,9 +433,15 @@ export function AuthProvider({ children }) {
 
     const normalizedUser = {
       ...serverUser,
+      blocked: serverUser.blocked ?? false,
       avatar: serverUser.profile_photo || serverUser.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(serverUser.name || serverUser.email)}`,
       role: serverUser.role || 'user'
     };
+
+    if (normalizedUser.blocked) {
+      showToast('This account has been blocked by an administrator.', 'error');
+      return;
+    }
 
     if (!playIntroAnimation) {
       playIntroSound();
@@ -315,7 +495,13 @@ export function AuthProvider({ children }) {
     const updatedUser = { ...user, password: newPassword };
     setUser(updatedUser);
     setUsers((prev) => {
-      const nextUsers = prev.map((u) => (u.id === user.id ? updatedUser : u));
+      const foundIndex = prev.findIndex((u) => u.id === updatedUser.id || u.email.toLowerCase() === updatedUser.email.toLowerCase());
+      let nextUsers;
+      if (foundIndex !== -1) {
+        nextUsers = prev.map((u) => (u.id === updatedUser.id || u.email.toLowerCase() === updatedUser.email.toLowerCase() ? updatedUser : u));
+      } else {
+        nextUsers = [...prev, updatedUser];
+      }
       localStorage.setItem('ronkws_users', JSON.stringify(nextUsers));
       return nextUsers;
     });
@@ -331,6 +517,26 @@ export function AuthProvider({ children }) {
           const newRole = u.role === 'admin' ? 'user' : 'admin';
           showToast(`Role updated for ${u.name} to ${newRole}`, 'success');
           return { ...u, role: newRole };
+        }
+        return u;
+      })
+    );
+  };
+
+  const toggleUserBlock = (userId) => {
+    setUsers((prev) =>
+      prev.map((u) => {
+        if (u.id === userId) {
+          const blocked = !Boolean(u.blocked);
+          if (user?.id === userId && blocked) {
+            setUser(null);
+            setCurrentRoute('login');
+          }
+          showToast(
+            `${u.name} has been ${blocked ? 'blocked' : 'unblocked'}`,
+            blocked ? 'error' : 'success'
+          );
+          return { ...u, blocked };
         }
         return u;
       })
@@ -367,6 +573,7 @@ export function AuthProvider({ children }) {
         updateProfile,
         changePassword,
         toggleUserRole,
+        toggleUserBlock,
         deleteUser,
         updatePreference,
         completeIntroAnimation

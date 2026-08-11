@@ -21,19 +21,32 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(() => Boolean(localStorage.getItem('ronkws_remembered_user')));
   const [showPassword, setShowPassword] = useState(false);
+  const [ageVerified, setAgeVerified] = useState(() => localStorage.getItem('ronkws_age_verified') === 'true');
+  const [showAgeGateModal, setShowAgeGateModal] = useState(() => localStorage.getItem('ronkws_age_verified') === 'true' ? false : true);
 
   // Field errors
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [nameError, setNameError] = useState('');
+  const [ageError, setAgeError] = useState('');
   const [googleError, setGoogleError] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [blockedBanner, setBlockedBanner] = useState(false);
   const [googleLoaded, setGoogleLoaded] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [googleClientId, setGoogleClientId] = useState(import.meta.env.VITE_GOOGLE_CLIENT_ID || '');
+  const [useRedirectFlow, setUseRedirectFlow] = useState(false);
 
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
   const isGoogleConfigured = Boolean(googleClientId);
   const shouldFetchGoogleConfig = !import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+  useEffect(() => {
+    const isMobile = typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (isMobile) {
+      setUseRedirectFlow(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (!shouldFetchGoogleConfig) return;
@@ -55,6 +68,16 @@ export default function Login() {
 
     fetchConfig();
   }, [apiBaseUrl, shouldFetchGoogleConfig]);
+
+  useEffect(() => {
+    localStorage.setItem('ronkws_age_verified', ageVerified ? 'true' : 'false');
+  }, [ageVerified]);
+
+  useEffect(() => {
+    if (!ageVerified) {
+      setShowAgeGateModal(true);
+    }
+  }, [ageVerified]);
 
   useEffect(() => {
     const scriptId = 'google-identity-script';
@@ -83,21 +106,31 @@ export default function Login() {
     try {
       const result = await fetchGoogleAuth(response.credential);
       if (!result?.success) {
+        const blocked = Boolean(result?.error?.toLowerCase().includes('blocked'));
+        setBlockedBanner(blocked);
         setGoogleError(result?.error || 'Google authentication failed.');
         setGoogleLoading(false);
         return;
       }
+      setBlockedBanner(false);
       loginWithGoogleUser(result.user);
       setGoogleLoading(false);
     } catch (error) {
       setGoogleError('Unable to complete Google login. Please try again.');
+      setBlockedBanner(false);
       setGoogleLoading(false);
       console.error(error);
     }
   };
 
-  const handleGoogleSignIn = () => {
+  const handleGoogleSignIn = (forceRedirect = false) => {
+    setAgeError('');
     setGoogleError('');
+    if (!ageVerified) {
+      setAgeError('You must confirm that you are 18 years or older to continue.');
+      setShowAgeGateModal(true);
+      return;
+    }
     if (!googleLoaded || !window.google?.accounts?.id) {
       setGoogleError('Google sign-in is not ready yet. Please try again in a moment.');
       return;
@@ -108,15 +141,24 @@ export default function Login() {
       return;
     }
 
+    const useRedirect = forceRedirect || useRedirectFlow;
     setGoogleLoading(true);
+
     window.google.accounts.id.initialize({
       client_id: googleClientId,
       callback: handleGoogleCredential,
-      ux_mode: 'popup'
+      ux_mode: useRedirect ? 'redirect' : 'popup'
     });
 
     window.google.accounts.id.prompt((notification) => {
       if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+        if (!useRedirect) {
+          setGoogleError('Popup blocked on mobile. Switching to redirect sign-in...');
+          setGoogleLoading(false);
+          handleGoogleSignIn(true);
+          return;
+        }
+
         setGoogleError('Google authentication prompt was canceled or blocked.');
         setGoogleLoading(false);
       }
@@ -144,7 +186,7 @@ export default function Login() {
     return '';
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const eErr = validateEmail(email);
@@ -155,14 +197,22 @@ export default function Login() {
     setPasswordError(pErr);
     setNameError(nErr);
 
-    if (eErr || pErr || (mode === 'signup' && nErr)) {
+    const ageErr = ageVerified ? '' : 'You must confirm that you are 18 years or older to continue.';
+    setAgeError(ageErr);
+
+    if (eErr || pErr || (mode === 'signup' && nErr) || ageErr) {
       return;
     }
 
+    let result;
     if (mode === 'login') {
-      login(email, password, rememberMe);
+      result = await login(email, password, rememberMe);
     } else {
-      signup(name, email, password);
+      result = await signup(name, email, password);
+    }
+
+    if (!result?.success) {
+      setGoogleError(result.error || 'Unable to complete authentication.');
     }
   };
 
@@ -174,6 +224,66 @@ export default function Login() {
 
       {/* Main Login Box */}
       <main className="w-full max-w-md z-10 relative">
+        {showAgeGateModal && (
+          <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/80 px-4 py-6">
+            <div className="w-full max-w-lg rounded-[32px] border border-white/15 bg-[#16131f]/95 p-8 text-left shadow-[0_20px_60px_rgba(0,0,0,0.55)] backdrop-blur-xl">
+              <div className="mb-6 text-center">
+                <span className="inline-flex items-center justify-center rounded-full bg-purple-600/15 text-purple-200 w-12 h-12 mx-auto mb-4">
+                  <span className="material-symbols-outlined text-3xl">verified_user</span>
+                </span>
+                <h2 className="text-2xl font-extrabold text-white mb-2">Age Verification Required</h2>
+                <p className="text-sm text-zinc-400 max-w-xl mx-auto">
+                  You must confirm that you are 18 years or older before continuing to Ronkws Streaming Hub.
+                  This check protects our community and ensures compliance with platform policies.
+                </p>
+              </div>
+              <div className="space-y-4">
+                <label className="flex items-start gap-3 rounded-[24px] border border-white/10 bg-white/5 p-4">
+                  <input
+                    type="checkbox"
+                    checked={ageVerified}
+                    onChange={(e) => {
+                      setAgeVerified(e.target.checked);
+                      if (e.target.checked) {
+                        setAgeError('');
+                        setShowAgeGateModal(false);
+                      }
+                    }}
+                    className="mt-1 h-5 w-5 rounded border-white/20 bg-[#181622] text-purple-500 focus:ring-purple-500"
+                  />
+                  <span className="text-sm text-zinc-200 leading-6">
+                    I confirm that I am <strong>18 years or older</strong> and authorized to use this service.
+                  </span>
+                </label>
+                {ageError && <p className="text-xs text-rose-400">{ageError}</p>}
+              </div>
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAgeVerified(true);
+                    setShowAgeGateModal(false);
+                    setAgeError('');
+                  }}
+                  className="w-full sm:w-auto bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-[24px] px-6 py-3 transition-all"
+                >
+                  I am 18 or older
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAgeVerified(false);
+                    setShowAgeGateModal(true);
+                    setAgeError('You must confirm that you are 18 years or older to continue.');
+                  }}
+                  className="w-full sm:w-auto border border-white/10 text-white/80 hover:text-white hover:border-purple-500 rounded-[24px] px-6 py-3 transition-all"
+                >
+                  I am under 18
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="bg-[#181622]/85 backdrop-blur-xl border border-white/10 rounded-[28px] p-8 shadow-[0px_8px_32px_rgba(124,58,237,0.2)] flex flex-col items-center">
           
           {/* Logo Badge */}
@@ -197,6 +307,26 @@ export default function Login() {
                 : 'Join thousands enjoying unlimited entertainment.'}
             </p>
           </div>
+
+          {blockedBanner && (
+            <div className="w-full rounded-3xl border border-rose-500/30 bg-rose-500/10 p-4 mb-4 text-left text-sm text-rose-100">
+              <div className="flex items-start gap-3">
+                <span className="material-symbols-outlined text-2xl">block</span>
+                <div>
+                  <p className="font-semibold">Blocked Account</p>
+                  <p className="text-xs text-rose-200 mt-1">
+                    Your account has been blocked by an administrator. If you believe this is a mistake, contact support.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {authError && !blockedBanner && (
+            <div className="w-full rounded-3xl border border-yellow-500/30 bg-yellow-500/10 p-4 mb-4 text-left text-sm text-yellow-100">
+              {authError}
+            </div>
+          )}
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="w-full space-y-4">
@@ -275,6 +405,22 @@ export default function Login() {
               <span>Remember me</span>
             </label>
 
+            <label className="flex items-start gap-3 text-sm text-zinc-300">
+              <input
+                type="checkbox"
+                checked={ageVerified}
+                onChange={(e) => {
+                  setAgeVerified(e.target.checked);
+                  if (e.target.checked) setAgeError('');
+                }}
+                className="mt-1 h-4 w-4 rounded border-white/20 bg-[#181622] text-purple-500 focus:ring-purple-500"
+              />
+              <span>
+                I confirm that I am <strong>18 years or older</strong> and agree to the terms of use.
+              </span>
+            </label>
+            {ageError && <p className="text-xs text-rose-400 mt-1 pl-4">{ageError}</p>}
+
             <div className="flex items-center gap-2 py-2">
               <div className="h-px flex-1 bg-white/10" />
               <span className="text-[11px] text-zinc-400 uppercase tracking-[0.2em]">or</span>
@@ -284,8 +430,8 @@ export default function Login() {
             <button
               type="button"
               onClick={handleGoogleSignIn}
-              disabled={googleLoading || !isGoogleConfigured}
-              className={`w-full bg-[#2f1b66] ${isGoogleConfigured ? 'hover:bg-[#4b32a4] shadow-[0_4px_20px_rgba(79,63,218,0.35)] hover:shadow-[0_6px_28px_rgba(79,63,218,0.45)]' : 'opacity-60 cursor-not-allowed'} text-white font-bold text-sm rounded-[24px] py-3.5 transition-all duration-300 active:scale-[0.98] flex items-center justify-center gap-3`}
+              disabled={showAgeGateModal || googleLoading || !isGoogleConfigured}
+              className={`w-full bg-[#2f1b66] ${isGoogleConfigured && !showAgeGateModal ? 'hover:bg-[#4b32a4] shadow-[0_4px_20px_rgba(79,63,218,0.35)] hover:shadow-[0_6px_28px_rgba(79,63,218,0.45)]' : 'opacity-60 cursor-not-allowed'} text-white font-bold text-sm rounded-[24px] py-3.5 transition-all duration-300 active:scale-[0.98] flex items-center justify-center gap-3`}
             >
               <span className="w-6 h-6 rounded-full bg-white flex items-center justify-center">
                 <GoogleIcon />
@@ -312,7 +458,8 @@ export default function Login() {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm rounded-[24px] py-3.5 transition-all duration-300 shadow-[0_4px_20px_rgba(124,58,237,0.4)] hover:shadow-[0_6px_28px_rgba(124,58,237,0.6)] active:scale-[0.98] mt-2"
+              disabled={showAgeGateModal}
+              className={`w-full ${showAgeGateModal ? 'bg-white/10 text-zinc-400 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-500 text-white'} font-bold text-sm rounded-[24px] py-3.5 transition-all duration-300 shadow-[0_4px_20px_rgba(124,58,237,0.4)] hover:shadow-[0_6px_28px_rgba(124,58,237,0.6)] active:scale-[0.98] mt-2`}
             >
               {mode === 'login' ? 'Log in' : 'Create Account'}
             </button>

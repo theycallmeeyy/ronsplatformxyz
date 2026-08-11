@@ -3,10 +3,11 @@ import { useAuth } from '../context/AuthContext';
 import { useContent } from '../context/ContentContext';
 
 export default function AdminDashboard() {
-  const { users, toggleUserRole, deleteUser } = useAuth();
-  const { items, addContent, updateContent, deleteContent } = useContent();
+  const { users, toggleUserRole, toggleUserBlock, deleteUser } = useAuth();
+  const { items, addContent, updateContent, deleteContent, toggleTrending } = useContent();
 
-  const [activeTab, setActiveTab] = useState('content'); // 'content' or 'users'
+  const [activeTab, setActiveTab] = useState('content'); // 'content', 'trending', or 'users'
+  const trendingItems = items.filter((item) => item.isTrending);
 
   // Add/Edit Content Modal State
   const [showModal, setShowModal] = useState(false);
@@ -22,6 +23,8 @@ export default function AdminDashboard() {
   const [description, setDescription] = useState('');
   const [rating, setRating] = useState('4.8');
   const [year, setYear] = useState('2024');
+  const [isTrending, setIsTrending] = useState(false);
+  const [isRecommended, setIsRecommended] = useState(false);
 
   const openAddModal = () => {
     setEditingItem(null);
@@ -34,6 +37,8 @@ export default function AdminDashboard() {
     setDescription('');
     setRating('4.8');
     setYear('2024');
+    setIsTrending(false);
+    setIsRecommended(false);
     setShowModal(true);
   };
 
@@ -48,6 +53,8 @@ export default function AdminDashboard() {
     setDescription(item.description || '');
     setRating(item.rating || '4.8');
     setYear(item.year || '2024');
+    setIsTrending(Boolean(item.isTrending));
+    setIsRecommended(Boolean(item.isRecommended));
     setShowModal(true);
   };
 
@@ -62,7 +69,9 @@ export default function AdminDashboard() {
       bannerUrl: bannerUrl || 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?auto=format&fit=crop&w=800&q=80',
       description,
       rating,
-      year
+      year,
+      isTrending,
+      isRecommended
     };
 
     if (editingItem) {
@@ -134,6 +143,17 @@ export default function AdminDashboard() {
           Content Catalog ({items.length})
         </button>
         <button
+          onClick={() => setActiveTab('trending')}
+          className={`font-bold text-sm pb-2 border-b-2 transition-all flex items-center gap-2 ${
+            activeTab === 'trending'
+              ? 'text-purple-300 border-purple-500'
+              : 'text-zinc-400 border-transparent hover:text-white'
+          }`}
+        >
+          <span className="material-symbols-outlined text-[18px]">local_fire_department</span>
+          Top Trending ({trendingItems.length})
+        </button>
+        <button
           onClick={() => setActiveTab('users')}
           className={`font-bold text-sm pb-2 border-b-2 transition-all flex items-center gap-2 ${
             activeTab === 'users'
@@ -174,6 +194,13 @@ export default function AdminDashboard() {
                     <td className="p-4 font-medium text-zinc-400">{item.year}</td>
                     <td className="p-4 text-right space-x-2">
                       <button
+                        onClick={() => toggleTrending(item.id)}
+                        className={`p-2 ${item.isTrending ? 'bg-emerald-600/20 text-emerald-200 hover:bg-emerald-600' : 'bg-purple-600/20 text-purple-300 hover:bg-purple-600'} rounded-lg transition-colors`}
+                        title={item.isTrending ? 'Unset Trending' : 'Mark as Trending'}
+                      >
+                        <span className="material-symbols-outlined text-[16px]">trending_up</span>
+                      </button>
+                      <button
                         onClick={() => openEditModal(item)}
                         className="p-2 bg-purple-600/20 text-purple-300 hover:bg-purple-600 hover:text-white rounded-lg transition-colors"
                         title="Edit Content"
@@ -197,6 +224,68 @@ export default function AdminDashboard() {
       )}
 
       {/* User Management Table */}
+      {activeTab === 'trending' && (
+        <section className="glass-card rounded-3xl overflow-hidden border border-white/10">
+          <div className="p-6 border-b border-white/10">
+            <h2 className="text-xl font-bold text-white">Manage Top Trending</h2>
+            <p className="text-sm text-zinc-400 mt-1">Review and update the items currently marked as trending. Changes are saved permanently in the app catalog.</p>
+          </div>
+
+          {trendingItems.length === 0 ? (
+            <div className="p-8 text-center text-zinc-300">
+              <span className="material-symbols-outlined text-5xl text-purple-400 mb-4">local_fire_department</span>
+              <h3 className="text-lg font-bold text-white mb-2">No Trending Items</h3>
+              <p className="text-sm text-zinc-400">Mark content as trending from the content table to add items to this list.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-white/5 border-b border-white/10 text-zinc-400 font-bold uppercase">
+                  <tr>
+                    <th className="p-4">Item Title</th>
+                    <th className="p-4">Category</th>
+                    <th className="p-4">Rating</th>
+                    <th className="p-4">Year</th>
+                    <th className="p-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5 text-zinc-200">
+                  {trendingItems.map((item) => (
+                    <tr key={item.id} className="hover:bg-purple-900/10 transition-colors">
+                      <td className="p-4 font-bold flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg overflow-hidden bg-zinc-800 shrink-0">
+                          <img src={item.bannerUrl} alt={item.title} className="w-full h-full object-cover" />
+                        </div>
+                        <span className="text-sm font-bold text-white truncate max-w-xs">{item.title}</span>
+                      </td>
+                      <td className="p-4 font-semibold text-purple-300">{item.category}</td>
+                      <td className="p-4 font-semibold text-amber-300">★ {item.rating}</td>
+                      <td className="p-4 font-medium text-zinc-400">{item.year}</td>
+                      <td className="p-4 text-right space-x-2">
+                        <button
+                          onClick={() => toggleTrending(item.id)}
+                          className="p-2 bg-rose-600/20 text-rose-300 hover:bg-rose-600 hover:text-white rounded-lg transition-colors"
+                          title="Remove from Trending"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">highlight_off</span>
+                        </button>
+                        <button
+                          onClick={() => openEditModal(item)}
+                          className="p-2 bg-purple-600/20 text-purple-300 hover:bg-purple-600 hover:text-white rounded-lg transition-colors"
+                          title="Edit Content"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">edit</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      )}
+
       {activeTab === 'users' && (
         <section className="glass-card rounded-3xl overflow-hidden border border-white/10">
           <div className="overflow-x-auto">
@@ -338,6 +427,27 @@ export default function AdminDashboard() {
                   placeholder="https://images.unsplash.com/..."
                   className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-purple-500"
                 />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <label className="flex items-center gap-2 text-xs font-semibold text-zinc-400 bg-white/5 border border-white/10 rounded-2xl p-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isTrending}
+                    onChange={(e) => setIsTrending(e.target.checked)}
+                    className="w-4 h-4 accent-purple-600"
+                  />
+                  Mark as Trending
+                </label>
+                <label className="flex items-center gap-2 text-xs font-semibold text-zinc-400 bg-white/5 border border-white/10 rounded-2xl p-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isRecommended}
+                    onChange={(e) => setIsRecommended(e.target.checked)}
+                    className="w-4 h-4 accent-purple-600"
+                  />
+                  Mark as Recommended
+                </label>
               </div>
 
               <div>
