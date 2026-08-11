@@ -11,7 +11,7 @@ async function loadDb() {
     return JSON.parse(content);
   } catch (error) {
     if (error.code === 'ENOENT') {
-      return { users: [], meta: { visitorOffset: 534 } };
+      return { users: [], meta: { visitorOffset: 1578 } };
     }
     throw error;
   }
@@ -142,6 +142,33 @@ export async function addOrUpdateRating(siteId, userId, score) {
   entry.byUser[userId] = Number(score);
 
   db.meta.ratings[siteId] = entry;
+  await saveDb(db);
+  return entry;
+}
+
+export async function getComments(siteId) {
+  const db = await loadDb();
+  db.meta = db.meta || { visitorOffset: 534 };
+  const comments = db.meta.comments || {};
+  if (siteId) return comments[siteId] || [];
+  return comments;
+}
+
+export async function addComment(siteId, userId, comment, useful, author) {
+  const db = await loadDb();
+  db.meta = db.meta || { visitorOffset: 534 };
+  db.meta.comments = db.meta.comments || {};
+  const commentsForSite = db.meta.comments[siteId] || [];
+  const entry = {
+    id: `comment-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    userId,
+    author: String(author || userId || 'Guest'),
+    comment: String(comment || '').trim(),
+    useful: Boolean(useful),
+    createdAt: new Date().toISOString()
+  };
+  commentsForSite.unshift(entry);
+  db.meta.comments[siteId] = commentsForSite;
   await saveDb(db);
   return entry;
 }

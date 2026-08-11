@@ -21,7 +21,6 @@ export default function Home() {
 
   const [totalUsers, setTotalUsers] = useState(null);
   const [activeUsers, setActiveUsers] = useState(null);
-  const [simulatedUsers, setSimulatedUsers] = useState(null);
   const [pwaStatus, setPwaStatus] = useState({
     secureContext: false,
     manifestExists: false,
@@ -104,17 +103,8 @@ export default function Home() {
       loadPwaStatus();
     }, 30000);
     // Simulation: start at 1,532 and each minute increment by 10 and decrement by 4 (net +6)
-    const SIM_START = 1532;
-    const JOIN_PER_MIN = 10;
-    const LEAVE_PER_MIN = 4;
-    setSimulatedUsers(SIM_START);
-    const simInterval = window.setInterval(() => {
-      setSimulatedUsers((prev) => (Number(prev) || 0) + JOIN_PER_MIN - LEAVE_PER_MIN);
-    }, 60 * 1000);
-
     return () => {
       window.clearInterval(interval);
-      window.clearInterval(simInterval);
     };
   }, []);
 
@@ -165,7 +155,10 @@ export default function Home() {
               <span className="relative inline-flex rounded-full bg-emerald-400 h-2.5 w-2.5 shadow-[0_0_6px_rgba(16,185,129,0.65)]" />
             </span>
             <span className="font-semibold text-white">Detected users:</span>
-            <span>{formatExact(simulatedUsers !== null ? simulatedUsers : totalUsers)}</span>
+            <span>{formatExact(totalUsers ?? 1578)}</span>
+            {activeUsers !== null && (
+              <span className="text-emerald-300">({formatExact(activeUsers)} active)</span>
+            )}
           </div>
         </div>
 

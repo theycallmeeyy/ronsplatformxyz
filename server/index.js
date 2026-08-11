@@ -14,7 +14,9 @@ import {
   getMeta,
   incrementVisitorOffset,
   getRatings,
-  addOrUpdateRating
+  addOrUpdateRating,
+  getComments,
+  addComment
 } from './db.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -23,7 +25,7 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const PORT = process.env.PORT || 4000;
-const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
+const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const JWT_SECRET = process.env.JWT_SECRET || 'change-this-secret';
 
@@ -289,6 +291,60 @@ app.post('/api/ratings', async (req, res) => {
   } catch (error) {
     console.error('Failed to submit rating:', error);
     return res.status(500).json({ success: false, error: 'Unable to submit rating' });
+  }
+});
+
+app.get('/api/comments', async (req, res) => {
+  try {
+    const { siteId } = req.query || {};
+    if (!siteId) {
+      return res.status(400).json({ success: false, error: 'Missing siteId' });
+    }
+    const comments = await getComments(siteId);
+    return res.json({ success: true, comments });
+  } catch (error) {
+    console.error('Failed to fetch comments:', error);
+    return res.status(500).json({ success: false, error: 'Unable to load comments' });
+  }
+});
+
+app.post('/api/comments', async (req, res) => {
+  try {
+    const token = req.cookies.ronkws_session;
+    const guestCookieName = 'ronkws_guest';
+    let userId = null;
+    if (token) {
+      try {
+        const payload = jwt.verify(token, JWT_SECRET);
+        userId = payload.sub;
+      } catch (err) {
+        // invalid token - ignore and fall back to guest
+      }
+    }
+
+    if (!userId) {
+      userId = req.cookies[guestCookieName];
+      if (!userId) {
+        userId = `guest-${Date.now()}-${Math.random().toString(36).slice(2,9)}`;
+        res.cookie(guestCookieName, userId, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 10 * 365 * 24 * 60 * 60 * 1000
+        });
+      }
+    }
+
+    const { siteId, comment, useful, author } = req.body || {};
+    if (!siteId || typeof comment === 'undefined') {
+      return res.status(400).json({ success: false, error: 'Missing siteId or comment' });
+    }
+
+    const entry = await addComment(siteId, userId, comment, useful, author);
+    return res.json({ success: true, comment: entry });
+  } catch (error) {
+    console.error('Failed to submit comment:', error);
+    return res.status(500).json({ success: false, error: 'Unable to submit comment' });
   }
 });
 

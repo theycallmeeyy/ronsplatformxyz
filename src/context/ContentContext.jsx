@@ -31,7 +31,7 @@ export function ContentProvider({ children }) {
     if (saved) {
       try { return JSON.parse(saved); } catch (e) { console.error(e); }
     }
-    return ['net-01', 'dis-02', 'mov-101'];
+    return [];
   });
 
   // Watch history state: array of { id, title, progress, lastWatched }
@@ -83,9 +83,25 @@ export function ContentProvider({ children }) {
     });
   };
 
-  // Open item in modal player & update watch history
+  const openExternalLink = (url) => {
+    if (!url) return false;
+    const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
+    if (newWindow) {
+      newWindow.focus();
+      return true;
+    }
+    return false;
+  };
+
+  // Open item in modal player, or open external platform URLs directly if no embed is available.
   const openItemModal = (item) => {
-    setActiveModalItem(item);
+    const externalOnly = item?.url && !item?.embedUrl;
+    const openedExternally = externalOnly && openExternalLink(item.url);
+
+    if (!externalOnly || !openedExternally) {
+      setActiveModalItem(item);
+    }
+
     // Add or update watch history
     setWatchHistory((prev) => {
       const existing = prev.find((w) => w.id === item.id);

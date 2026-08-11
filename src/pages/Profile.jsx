@@ -52,6 +52,8 @@ export default function Profile() {
   const [currPassword, setCurrPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [passError, setPassError] = useState('');
+  const [showCurrPassword, setShowCurrPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
 
   // Preference Toggles are persisted via AuthContext and localStorage
   const darkMode = preferences.darkMode;
@@ -366,26 +368,42 @@ export default function Profile() {
             </div>
 
             <form onSubmit={handleChangePassword} className="space-y-4">
-              <div>
+              <div className="relative">
                 <label className="text-xs font-semibold text-zinc-400 block mb-1">Current Password</label>
                 <input
-                  type="password"
+                  type={showCurrPassword ? 'text' : 'password'}
                   value={currPassword}
                   onChange={(e) => setCurrPassword(e.target.value)}
                   className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-purple-500"
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
+                  aria-label={showCurrPassword ? 'Hide current password' : 'Show current password'}
+                >
+                  <span className="material-symbols-outlined">{showCurrPassword ? 'visibility_off' : 'visibility'}</span>
+                </button>
               </div>
 
-              <div>
+              <div className="relative">
                 <label className="text-xs font-semibold text-zinc-400 block mb-1">New Password (min 6 chars)</label>
                 <input
-                  type="password"
+                  type={showNewPassword ? 'text' : 'password'}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-purple-500"
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
+                  aria-label={showNewPassword ? 'Hide new password' : 'Show new password'}
+                >
+                  <span className="material-symbols-outlined">{showNewPassword ? 'visibility_off' : 'visibility'}</span>
+                </button>
               </div>
 
               {passError && <p className="text-xs text-rose-400 font-semibold">{passError}</p>}

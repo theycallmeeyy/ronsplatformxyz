@@ -70,6 +70,24 @@ export async function submitRating(siteId, score) {
   return response.json();
 }
 
+export async function fetchComments(siteId) {
+  const response = await fetch(`${API_BASE_URL}/api/comments?siteId=${encodeURIComponent(siteId)}`, {
+    method: 'GET',
+    credentials: 'include'
+  });
+  return response.json();
+}
+
+export async function submitComment(siteId, comment, useful, author) {
+  const response = await fetch(`${API_BASE_URL}/api/comments`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ siteId, comment, useful, author })
+  });
+  return response.json();
+}
+
 export async function fetchPwaStatus() {
   const response = await fetch(`${API_BASE_URL}/api/pwa/status`, {
     method: 'GET',
