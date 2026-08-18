@@ -18,7 +18,7 @@ export default function Home() {
     watchHistory,
     openItemModal
   } = useContent();
-  const { setCurrentRoute, user } = useAuth();
+  const { setCurrentRoute } = useAuth();
 
   const [totalUsers, setTotalUsers] = useState(null);
   const [activeUsers, setActiveUsers] = useState(null);
@@ -129,17 +129,6 @@ export default function Home() {
 
   return (
     <div className="pt-24 md:pt-28 px-5 md:px-12 max-w-7xl mx-auto space-y-8 pb-24">
-      {/* Returning User Greeting */}
-      {user && Number(user.memberSince) < new Date().getFullYear() && (
-        <div className="flex flex-col items-center justify-center text-center py-6">
-          <div className="h-16 w-16 bg-gradient-to-tr from-purple-700 to-indigo-600 rounded-2xl flex items-center justify-center shadow-[0_0_25px_rgba(124,58,237,0.5)] mb-3">
-            <span className="font-black text-white text-2xl tracking-wider">R</span>
-          </div>
-          <p className="text-lg text-zinc-300 font-medium">
-            Your streaming everything starts here.
-          </p>
-        </div>
-      )}
       {/* Hero Banner */}
       <section className="relative rounded-3xl overflow-hidden glass-card p-8 md:p-12 min-h-[300px] flex flex-col justify-center items-center text-center border border-white/10 shadow-[0_8px_32px_rgba(124,58,237,0.15)]">
         <div className="absolute inset-0 hero-glow opacity-60 pointer-events-none" />
