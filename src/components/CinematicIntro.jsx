@@ -102,6 +102,15 @@ export default function CinematicIntro({ onComplete }) {
             STREAMING HUB
           </p>
 
+          {/* Tagline below animated logo */}
+          {(phase === 'hold' || phase === 'fade') && (
+            <p className={`text-sm md:text-base text-zinc-300 mt-6 transition-all duration-500 ${
+              phase === 'fade' ? 'opacity-0' : 'opacity-100'
+            }`}>
+              Your streaming everything starts here.
+            </p>
+          )}
+
           {/* Red light beam overlay on text during sweep */}
           {(phase === 'sweep' || phase === 'hold') && (
             <div className="absolute inset-0 pointer-events-none overflow-hidden">

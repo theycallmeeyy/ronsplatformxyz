@@ -85,6 +85,8 @@ export function ContentProvider({ children }) {
 
   const openExternalLink = (url) => {
     if (!url) return false;
+    // Push a state to history so back button brings user to home
+    window.history.pushState({ source: 'ronkws_platform' }, '', window.location.href);
     const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
     if (newWindow) {
       newWindow.focus();

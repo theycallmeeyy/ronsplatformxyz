@@ -554,6 +554,18 @@ export function AuthProvider({ children }) {
     introStartedRef.current = false;
   };
 
+  // Handle browser back button to redirect to home when pressing back from platform links
+  useEffect(() => {
+    const handlePopState = (event) => {
+      if (event.state?.source === 'ronkws_platform') {
+        setCurrentRoute('home');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{

@@ -72,6 +72,7 @@ export default function ContentModal() {
   if (!activeModalItem) return null;
   const isFav = favorites.includes(activeModalItem.id);
   const externalUrl = activeModalItem.url || '';
+  const { setCurrentRoute } = useAuth();
   const safety = useMemo(() => assessUrlSafety(externalUrl), [externalUrl]);
   const canEmbedExternal = useMemo(
     () => Boolean(activeModalItem?.embedUrl?.trim()),
@@ -80,9 +81,24 @@ export default function ContentModal() {
 
   const openExternalLink = () => {
     if (!externalUrl) return;
+    // Push a state to history so back button brings user to home
+    window.history.pushState({ source: 'ronkws_platform' }, '', window.location.href);
     const newWindow = window.open(externalUrl, '_blank', 'noopener,noreferrer');
     if (newWindow) newWindow.focus();
   };
+
+  // Handle browser back button to return to home
+  useEffect(() => {
+    const handlePopState = (event) => {
+      if (event.state?.source === 'ronkws_platform') {
+        closeModalModal();
+        setCurrentRoute('home');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [closeModalModal, setCurrentRoute]);
 
   useEffect(() => {
     if (!activeModalItem) return;

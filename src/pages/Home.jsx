@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useContent } from '../context/ContentContext';
 import { useAuth } from '../context/AuthContext';
 import { fetchAuthStats, fetchPwaStatus, trackVisit } from '../utils/api';
@@ -7,6 +7,7 @@ import { useInstallPrompt } from '../useInstallPrompt';
 import ContentCard from '../components/ContentCard';
 
 export default function Home() {
+  const lastRandomChangeRef = useRef(0);
   const {
     items,
     filteredItems,
@@ -17,7 +18,7 @@ export default function Home() {
     watchHistory,
     openItemModal
   } = useContent();
-  const { setCurrentRoute } = useAuth();
+  const { setCurrentRoute, user } = useAuth();
 
   const [totalUsers, setTotalUsers] = useState(null);
   const [activeUsers, setActiveUsers] = useState(null);
@@ -102,14 +103,43 @@ export default function Home() {
       loadStats();
       loadPwaStatus();
     }, 30000);
-    // Simulation: start at 1,532 and each minute increment by 10 and decrement by 4 (net +6)
+
+    // Simulate user count changes every 2 seconds (increment/decrement by 500-3000, no repeats)
+    const userCountInterval = window.setInterval(() => {
+      setTotalUsers((prev) => {
+        const currentUsers = prev ?? 1578;
+        let randomChange = Math.floor(Math.random() * 2500) + 500; // Random 500-3000
+        
+        // Ensure we don't pick the same number twice
+        while (randomChange === lastRandomChangeRef.current) {
+          randomChange = Math.floor(Math.random() * 2500) + 500;
+        }
+        lastRandomChangeRef.current = randomChange;
+        
+        const isIncrement = Math.random() > 0.5;
+        return isIncrement ? currentUsers + randomChange : Math.max(1000, currentUsers - randomChange);
+      });
+    }, 2000);
+
     return () => {
       window.clearInterval(interval);
+      window.clearInterval(userCountInterval);
     };
   }, []);
 
   return (
     <div className="pt-24 md:pt-28 px-5 md:px-12 max-w-7xl mx-auto space-y-8 pb-24">
+      {/* Returning User Greeting */}
+      {user && Number(user.memberSince) < new Date().getFullYear() && (
+        <div className="flex flex-col items-center justify-center text-center py-6">
+          <div className="h-16 w-16 bg-gradient-to-tr from-purple-700 to-indigo-600 rounded-2xl flex items-center justify-center shadow-[0_0_25px_rgba(124,58,237,0.5)] mb-3">
+            <span className="font-black text-white text-2xl tracking-wider">R</span>
+          </div>
+          <p className="text-lg text-zinc-300 font-medium">
+            Your streaming everything starts here.
+          </p>
+        </div>
+      )}
       {/* Hero Banner */}
       <section className="relative rounded-3xl overflow-hidden glass-card p-8 md:p-12 min-h-[300px] flex flex-col justify-center items-center text-center border border-white/10 shadow-[0_8px_32px_rgba(124,58,237,0.15)]">
         <div className="absolute inset-0 hero-glow opacity-60 pointer-events-none" />

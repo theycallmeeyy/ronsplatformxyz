@@ -296,18 +296,6 @@ export default function Login() {
             </h1>
           </div>
 
-          {/* Subtitle */}
-          <div className="text-center mb-6 w-full">
-            <h2 className="text-xl font-bold text-white mb-1">
-              {mode === 'login' ? 'Welcome Back' : 'Create Account'}
-            </h2>
-            <p className="text-xs text-zinc-400">
-              {mode === 'login'
-                ? 'Your streaming everything starts here.'
-                : 'Join thousands enjoying unlimited entertainment.'}
-            </p>
-          </div>
-
           {blockedBanner && (
             <div className="w-full rounded-3xl border border-rose-500/30 bg-rose-500/10 p-4 mb-4 text-left text-sm text-rose-100">
               <div className="flex items-start gap-3">
