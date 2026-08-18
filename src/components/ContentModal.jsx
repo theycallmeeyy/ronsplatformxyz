@@ -82,17 +82,34 @@ export default function ContentModal() {
   const openExternalLink = () => {
     if (!externalUrl) return;
     // Push a state to history so back button brings user to home
-    window.history.pushState({ source: 'ronkws_platform' }, '', window.location.href);
+    window.history.pushState({ source: 'ronkws_platform', timestamp: Date.now() }, '', window.location.href);
+    
+    // Prevent accidental navigation away - warn user if they try to close/leave
+    const handleBeforeUnload = (e) => {
+      e.preventDefault();
+      e.returnValue = '';
+      return '';
+    };
+    
     const newWindow = window.open(externalUrl, '_blank', 'noopener,noreferrer');
-    if (newWindow) newWindow.focus();
+    if (newWindow) {
+      newWindow.focus();
+    } else {
+      // If popup was blocked, remove the history entry we just added
+      window.history.back();
+      alert('Please allow popups to access external platforms');
+    }
   };
 
   // Handle browser back button to return to home
   useEffect(() => {
     const handlePopState = (event) => {
       if (event.state?.source === 'ronkws_platform') {
+        // Ensure we close modal and go to home
         closeModalModal();
         setCurrentRoute('home');
+        // Prevent going back further
+        window.history.pushState({ source: 'ronkws_home_guard' }, '', window.location.href);
       }
     };
 

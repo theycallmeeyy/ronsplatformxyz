@@ -60,6 +60,8 @@ function MainApp() {
         {currentRoute === 'profile' && <Profile />}
         {currentRoute === 'admin' && <AdminDashboard />}
         {currentRoute === 'dmca' && <Dmca />}
+        {/* Fallback: if currentRoute is invalid/undefined, show Home */}
+        {!['home', 'trending', 'favorites', 'search', 'profile', 'admin', 'dmca'].includes(currentRoute) && <Home />}
       </main>
 
       {/* Content Stream Player Modal */}

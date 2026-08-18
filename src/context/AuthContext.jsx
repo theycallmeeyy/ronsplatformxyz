@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { INITIAL_USERS } from '../data/initialData';
 import { useToast } from './ToastContext';
 import { fetchCurrentUser, logoutBackend, refreshSession } from '../utils/api';
@@ -548,9 +548,20 @@ export function AuthProvider({ children }) {
     showToast('User account deleted', 'info');
   };
 
+  // Wrapper for setCurrentRoute to validate route and prevent blank screens
+  const validRoutes = ['home', 'trending', 'favorites', 'search', 'profile', 'admin', 'dmca', 'login'];
+  const setCurrentRouteWithValidation = useCallback((route) => {
+    if (validRoutes.includes(route)) {
+      setCurrentRoute(route);
+    } else {
+      console.warn(`Invalid route: ${route}, defaulting to home`);
+      setCurrentRoute('home');
+    }
+  }, []);
+
   const completeIntroAnimation = () => {
     setPlayIntroAnimation(false);
-    setCurrentRoute('home');
+    setCurrentRouteWithValidation('home');
     introStartedRef.current = false;
   };
 
@@ -558,13 +569,18 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const handlePopState = (event) => {
       if (event.state?.source === 'ronkws_platform') {
-        setCurrentRoute('home');
+        setCurrentRouteWithValidation('home');
+        // Push a guard state to prevent going back further
+        window.history.pushState({ source: 'ronkws_home_guard' }, '', window.location.href);
+      } else if (event.state?.source === 'ronkws_home_guard') {
+        // Already at home, prevent going back
+        window.history.pushState({ source: 'ronkws_home_guard' }, '', window.location.href);
       }
     };
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
+  }, [setCurrentRouteWithValidation]);
 
   return (
     <AuthContext.Provider
@@ -577,7 +593,7 @@ export function AuthProvider({ children }) {
         isAdmin: user?.role === 'admin',
         playIntroAnimation,
         currentRoute,
-        setCurrentRoute,
+        setCurrentRoute: setCurrentRouteWithValidation,
         login,
         signup,
         logout,
