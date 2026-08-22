@@ -1,14 +1,30 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Navigation() {
   const { user, isAuthenticated, isAdmin, currentRoute, setCurrentRoute, logout } = useAuth();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const navigateFromDrawer = (route) => {
+    setCurrentRoute(route);
+    setDrawerOpen(false);
+  };
 
   return (
     <>
       {/* Top Header - Mobile */}
       <header className="fixed top-0 w-full z-40 bg-[#14121d]/85 backdrop-blur-xl border-b border-white/10 flex items-center justify-between px-5 h-16 md:hidden">
         <div className="flex items-center gap-3">
+          {isAuthenticated && (
+            <button
+              onClick={() => setDrawerOpen(true)}
+              title="Open navigation menu"
+              aria-label="Open navigation menu"
+              className="p-2 -ml-2 text-zinc-300 hover:text-white rounded-xl hover:bg-white/10 transition-colors"
+            >
+              <span className="material-symbols-outlined text-[23px]">menu</span>
+            </button>
+          )}
           <div className="h-10 w-10 bg-purple-700/80 rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(124,58,237,0.4)]">
             <span className="font-extrabold text-white text-xl tracking-wider">R</span>
           </div>
@@ -17,16 +33,28 @@ export default function Navigation() {
 
         <div className="flex items-center gap-3">
           {isAuthenticated ? (
-            <button
-              onClick={() => setCurrentRoute('profile')}
-              className="w-9 h-9 rounded-full border border-purple-500/40 overflow-hidden bg-purple-900/30 flex items-center justify-center"
-            >
-              {user?.avatar ? (
-                <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
-              ) : (
-                <span className="material-symbols-outlined text-purple-300 text-lg">person</span>
+            <>
+              {currentRoute === 'home' && (
+                <button
+                  onClick={() => setCurrentRoute('search')}
+                  title="Search"
+                  aria-label="Search"
+                  className="p-2 text-zinc-300 hover:text-purple-300 rounded-xl hover:bg-white/10 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[22px]">search</span>
+                </button>
               )}
-            </button>
+              <button
+                onClick={() => setCurrentRoute('profile')}
+                className="w-9 h-9 rounded-full border border-purple-500/40 overflow-hidden bg-purple-900/30 flex items-center justify-center"
+              >
+                {user?.avatar ? (
+                  <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="material-symbols-outlined text-purple-300 text-lg">person</span>
+                )}
+              </button>
+            </>
           ) : (
             <button
               onClick={() => setCurrentRoute('login')}
@@ -37,6 +65,53 @@ export default function Navigation() {
           )}
         </div>
       </header>
+
+      {isAuthenticated && drawerOpen && (
+        <>
+          <button
+            onClick={() => setDrawerOpen(false)}
+            aria-label="Close navigation menu"
+            className="fixed inset-0 z-40 bg-black/60 md:hidden"
+          />
+          <aside className="fixed top-0 left-0 bottom-0 z-50 w-72 max-w-[85vw] bg-[#181622] border-r border-white/10 shadow-[12px_0_32px_rgba(0,0,0,0.45)] md:hidden p-5">
+            <div className="flex items-center justify-between mb-8">
+              <span className="text-lg font-bold text-purple-200">Ronkws</span>
+              <button
+                onClick={() => setDrawerOpen(false)}
+                title="Close navigation menu"
+                aria-label="Close navigation menu"
+                className="p-2 text-zinc-400 hover:text-white rounded-xl hover:bg-white/10 transition-colors"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <nav className="space-y-2">
+              {[
+                ['home', 'home', 'Home'],
+                ['trending', 'trending_up', 'Trending'],
+                ['favorites', 'star', 'Favorites'],
+                ['search', 'search', 'Search'],
+                ['profile', 'person', 'Profile'],
+                ...(isAdmin ? [['admin', 'admin_panel_settings', 'Admin']] : []),
+                ['dmca', 'gavel', 'DMCA']
+              ].map(([route, icon, label]) => (
+                <button
+                  key={route}
+                  onClick={() => navigateFromDrawer(route)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors ${
+                    currentRoute === route
+                      ? 'bg-purple-600/20 text-purple-200'
+                      : 'text-zinc-300 hover:bg-white/10 hover:text-white'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[21px]">{icon}</span>
+                  <span className="font-semibold text-sm">{label}</span>
+                </button>
+              ))}
+            </nav>
+          </aside>
+        </>
+      )}
 
       {/* Top Header - Desktop */}
       <header className="hidden md:flex fixed top-0 w-full z-40 bg-[#14121d]/85 backdrop-blur-xl border-b border-white/10 px-8 h-20 items-center justify-between">
@@ -202,18 +277,6 @@ export default function Navigation() {
           >
             <span className="material-symbols-outlined text-[22px]">star</span>
             <span className="text-[10px] font-semibold">Favorites</span>
-          </button>
-
-          <button
-            onClick={() => setCurrentRoute('search')}
-            className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all ${
-              currentRoute === 'search'
-                ? 'text-purple-300 bg-purple-600/20 shadow-[0_0_12px_rgba(124,58,237,0.3)]'
-                : 'text-zinc-400 hover:text-purple-300'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[22px]">search</span>
-            <span className="text-[10px] font-semibold">Search</span>
           </button>
 
           <button
