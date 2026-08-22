@@ -3,14 +3,32 @@ import { useContent } from '../context/ContentContext';
 import { useAuth } from '../context/AuthContext';
 
 export default function Favorites() {
-  const { favoriteItems, toggleFavorite, openItemModal } = useContent();
+  const {
+    favoriteItems,
+    toggleFavorite,
+    openItemModal,
+    favoriteGroups,
+    favoriteCategories,
+    setFavoriteCategory,
+    addFavoriteCategory
+  } = useContent();
   const { setCurrentRoute } = useAuth();
   const [favSearch, setFavSearch] = useState('');
+  const [selectedGroup, setSelectedGroup] = useState('All');
+  const [newGroup, setNewGroup] = useState('');
 
   const filteredFavs = favoriteItems.filter((item) =>
-    item.title.toLowerCase().includes(favSearch.toLowerCase()) ||
-    item.category.toLowerCase().includes(favSearch.toLowerCase())
+    (selectedGroup === 'All' || (favoriteGroups[item.id] || 'Watch later') === selectedGroup) &&
+    (item.title.toLowerCase().includes(favSearch.toLowerCase()) ||
+      item.category.toLowerCase().includes(favSearch.toLowerCase()))
   );
+
+  const handleAddGroup = (event) => {
+    event.preventDefault();
+    if (addFavoriteCategory(newGroup)) {
+      setNewGroup('');
+    }
+  };
 
   return (
     <div className="pt-24 md:pt-28 px-5 md:px-12 max-w-7xl mx-auto space-y-8 pb-24">
@@ -24,20 +42,45 @@ export default function Favorites() {
         </div>
 
         {favoriteItems.length > 0 && (
-          <div className="relative w-full md:w-72">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-sm">
-              search
-            </span>
-            <input
-              type="text"
-              value={favSearch}
-              onChange={(e) => setFavSearch(e.target.value)}
-              placeholder="Search favorites..."
-              className="w-full bg-[#181622] border border-white/10 rounded-full py-2 pl-9 pr-4 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-purple-500"
-            />
+          <div className="flex w-full md:w-auto flex-col sm:flex-row gap-2">
+            <div className="relative w-full md:w-64">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-sm">search</span>
+              <input
+                type="text"
+                value={favSearch}
+                onChange={(e) => setFavSearch(e.target.value)}
+                placeholder="Search favorites..."
+                className="w-full bg-[#181622] border border-white/10 rounded-full py-2 pl-9 pr-4 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-purple-500"
+              />
+            </div>
+            <form onSubmit={handleAddGroup} className="flex gap-2">
+              <input
+                value={newGroup}
+                onChange={(e) => setNewGroup(e.target.value)}
+                placeholder="New category"
+                className="w-32 bg-[#181622] border border-white/10 rounded-full px-3 py-2 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-purple-500"
+              />
+              <button type="submit" title="Add favorite category" className="rounded-full bg-purple-600 px-3 text-xs font-semibold text-white hover:bg-purple-500">Add</button>
+            </form>
           </div>
         )}
       </section>
+
+      {favoriteItems.length > 0 && (
+        <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
+          {['All', ...favoriteCategories].map((category) => (
+            <button
+              key={category}
+              onClick={() => setSelectedGroup(category)}
+              className={`shrink-0 rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
+                selectedGroup === category ? 'bg-purple-600 text-white' : 'bg-white/5 text-zinc-300 hover:bg-white/10'
+              }`}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Grid or Empty State */}
       {filteredFavs.length === 0 ? (
@@ -88,9 +131,15 @@ export default function Favorites() {
                 </div>
 
                 <div className="flex justify-between items-center pt-3 border-t border-white/10">
-                  <span className="text-xs font-semibold text-purple-300 bg-purple-600/20 px-2.5 py-1 rounded-md">
-                    {item.genre || item.category}
-                  </span>
+                  <select
+                    value={favoriteGroups[item.id] || 'Watch later'}
+                    onChange={(event) => setFavoriteCategory(item.id, event.target.value)}
+                    onClick={(event) => event.stopPropagation()}
+                    className="max-w-[55%] bg-purple-600/20 text-purple-200 px-2 py-1 rounded-md text-[10px] font-semibold border border-purple-500/20 focus:outline-none"
+                    aria-label={`Category for ${item.title}`}
+                  >
+                    {favoriteCategories.map((category) => <option key={category} value={category}>{category}</option>)}
+                  </select>
                   <button
                     onClick={() => openItemModal(item)}
                     className="text-purple-300 hover:text-white transition-colors flex items-center gap-1 text-xs font-semibold"

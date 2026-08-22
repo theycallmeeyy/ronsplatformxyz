@@ -16,7 +16,8 @@ import {
   getRatings,
   addOrUpdateRating,
   getComments,
-  addComment
+  addComment,
+  updateUser
 } from './db.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -107,8 +108,19 @@ function setSessionCookie(res, userId) {
 
 function sanitizeForClient(user) {
   if (!user) return null;
-  const { id, google_uid, name, email, profile_photo, provider, created_at, updated_at, last_login } = user;
-  return { id, google_uid, name, email, profile_photo, provider, created_at, updated_at, last_login };
+  const { id, google_uid, name, email, profile_photo, provider, role, created_at, updated_at, last_login } = user;
+  return { id, google_uid, name, email, profile_photo, provider, role, created_at, updated_at, last_login };
+}
+
+async function getSessionUser(req) {
+  const token = req.cookies.ronkws_session;
+  if (!token) return null;
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    return getUserById(payload.sub);
+  } catch {
+    return null;
+  }
 }
 
 app.post('/api/auth/google', async (req, res) => {
@@ -189,6 +201,76 @@ app.post('/api/track/visit', async (req, res) => {
   } catch (error) {
     console.error('Failed to track visit:', error);
     return res.status(500).json({ success: false, error: 'Unable to track visit' });
+  }
+});
+
+app.get('/api/user/data', async (req, res) => {
+  const user = await getSessionUser(req);
+  if (!user) return res.status(401).json({ success: false, error: 'Authentication required' });
+  return res.json({
+    success: true,
+    data: user.app_data || {
+      watchHistory: [],
+      clickAnalytics: {},
+      favorites: [],
+      favoriteGroups: {},
+      favoriteCategories: ['Watch later'],
+      providerHistory: {},
+      preferences: { analyticsTracking: true, browsingHistory: true }
+    }
+  });
+});
+
+app.put('/api/user/data', async (req, res) => {
+  const user = await getSessionUser(req);
+  if (!user) return res.status(401).json({ success: false, error: 'Authentication required' });
+  const incoming = req.body || {};
+  const data = {
+    watchHistory: Array.isArray(incoming.watchHistory) ? incoming.watchHistory.slice(0, 100) : [],
+    clickAnalytics: incoming.clickAnalytics && typeof incoming.clickAnalytics === 'object' ? incoming.clickAnalytics : {},
+    favorites: Array.isArray(incoming.favorites) ? incoming.favorites.slice(0, 200) : [],
+    favoriteGroups: incoming.favoriteGroups && typeof incoming.favoriteGroups === 'object' ? incoming.favoriteGroups : {},
+    favoriteCategories: Array.isArray(incoming.favoriteCategories) ? incoming.favoriteCategories.slice(0, 30) : ['Watch later'],
+    providerHistory: incoming.providerHistory && typeof incoming.providerHistory === 'object' ? incoming.providerHistory : {},
+    preferences: incoming.preferences && typeof incoming.preferences === 'object' ? incoming.preferences : { analyticsTracking: true, browsingHistory: true }
+  };
+  const updated = await updateUser(user.id, { app_data: data, updated_at: new Date().toISOString() });
+  return res.json({ success: Boolean(updated), data });
+});
+
+app.delete('/api/user/history', async (req, res) => {
+  const user = await getSessionUser(req);
+  if (!user) return res.status(401).json({ success: false, error: 'Authentication required' });
+  const current = user.app_data || {};
+  const data = { ...current, watchHistory: [], clickAnalytics: {} };
+  await updateUser(user.id, { app_data: data, updated_at: new Date().toISOString() });
+  return res.json({ success: true, data });
+});
+
+app.get('/api/providers/status', async (req, res) => {
+  const url = String(req.query.url || '');
+  let parsedUrl;
+  try {
+    parsedUrl = new URL(url);
+  } catch {
+    return res.status(400).json({ success: false, error: 'Invalid provider URL' });
+  }
+  if (parsedUrl.protocol !== 'https:') {
+    return res.status(400).json({ success: false, error: 'Only HTTPS provider URLs are supported' });
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+  try {
+    let response = await fetch(parsedUrl, { method: 'HEAD', redirect: 'follow', signal: controller.signal });
+    if (!response.ok && response.status >= 400) {
+      response = await fetch(parsedUrl, { method: 'GET', redirect: 'follow', signal: controller.signal });
+    }
+    return res.json({ success: true, status: response.ok ? 'online' : 'offline', code: response.status, checkedAt: new Date().toISOString() });
+  } catch (error) {
+    return res.json({ success: true, status: 'offline', code: null, checkedAt: new Date().toISOString() });
+  } finally {
+    clearTimeout(timeout);
   }
 });
 
@@ -284,7 +366,11 @@ app.post('/api/ratings', async (req, res) => {
     if (!siteId || typeof score === 'undefined') {
       return res.status(400).json({ success: false, error: 'Missing siteId or score' });
     }
-    const numeric = Math.max(1, Math.min(5, Number(score)));
+    const parsedScore = Number(score);
+    if (!Number.isFinite(parsedScore)) {
+      return res.status(400).json({ success: false, error: 'Invalid rating score' });
+    }
+    const numeric = Math.max(1, Math.min(5, parsedScore));
     const entry = await addOrUpdateRating(siteId, userId, numeric);
     const userScore = entry?.byUser?.[userId] ?? null;
     return res.json({ success: true, rating: entry, userScore });

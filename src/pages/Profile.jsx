@@ -4,7 +4,7 @@ import { useContent } from '../context/ContentContext';
 
 export default function Profile() {
   const { user, isAdmin, updateProfile, changePassword, logout, setCurrentRoute, preferences, updatePreference } = useAuth();
-  const { watchHistory, favorites } = useContent();
+  const { watchHistory, favorites, clearHistory } = useContent();
   const savedBadgeTimeout = useRef(null);
 
   // Modal states
@@ -59,6 +59,8 @@ export default function Profile() {
   const darkMode = preferences.darkMode;
   const notifications = preferences.notifications;
   const autoplay = preferences.autoplay;
+  const analyticsTracking = preferences.analyticsTracking;
+  const browsingHistory = preferences.browsingHistory;
 
   // Preset Avatar Options
   const avatarPresets = [
@@ -248,6 +250,44 @@ export default function Profile() {
               onChange={() => handlePreferenceChange('autoplay', !autoplay, 'Autoplay')}
               className="w-5 h-5 accent-purple-600 rounded cursor-pointer"
             />
+          </div>
+
+          <div className="border-t border-white/10 px-4 py-4">
+            <p className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-3">Privacy</p>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold text-white">Usage analytics</p>
+                  <p className="text-[11px] text-zinc-500">Allow provider clicks to appear in admin analytics.</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={analyticsTracking}
+                  onChange={() => handlePreferenceChange('analyticsTracking', !analyticsTracking, 'Usage analytics')}
+                  className="w-5 h-5 accent-purple-600 rounded cursor-pointer"
+                />
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold text-white">Browsing history</p>
+                  <p className="text-[11px] text-zinc-500">Save providers for Continue Browsing and recommendations.</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={browsingHistory}
+                  onChange={() => handlePreferenceChange('browsingHistory', !browsingHistory, 'Browsing history')}
+                  className="w-5 h-5 accent-purple-600 rounded cursor-pointer"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={clearHistory}
+                disabled={!watchHistory.length}
+                className="text-xs font-semibold text-rose-300 hover:text-rose-200 disabled:text-zinc-600 disabled:cursor-not-allowed"
+              >
+                Clear browsing history and analytics
+              </button>
+            </div>
           </div>
         </div>
 

@@ -17,7 +17,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import Dmca from './pages/Dmca';
 
 function MainApp() {
-  const { authLoaded, isAuthenticated, playIntroAnimation, currentRoute, completeIntroAnimation } = useAuth();
+  const { authLoaded, isAuthenticated, isAdmin, playIntroAnimation, currentRoute, completeIntroAnimation } = useAuth();
 
   if (!authLoaded) {
     return (
@@ -58,10 +58,10 @@ function MainApp() {
         {currentRoute === 'favorites' && <Favorites />}
         {currentRoute === 'search' && <SearchPage />}
         {currentRoute === 'profile' && <Profile />}
-        {currentRoute === 'admin' && <AdminDashboard />}
+        {currentRoute === 'admin' && isAdmin && <AdminDashboard />}
         {currentRoute === 'dmca' && <Dmca />}
         {/* Fallback: if currentRoute is invalid/undefined, show Home */}
-        {!['home', 'trending', 'favorites', 'search', 'profile', 'admin', 'dmca'].includes(currentRoute) && <Home />}
+        {(!['home', 'trending', 'favorites', 'search', 'profile', 'admin', 'dmca'].includes(currentRoute) || (currentRoute === 'admin' && !isAdmin)) && <Home />}
       </main>
 
       {/* Content Stream Player Modal */}

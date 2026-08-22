@@ -15,8 +15,13 @@ export default function Home() {
     setSelectedCategory,
     searchQuery,
     setSearchQuery,
-    watchHistory,
-    openItemModal
+    clearHistory,
+    recentItems,
+    recommendedItems,
+    recommendationReason,
+    openItemModal,
+    getProviderStatus,
+    refreshProviderStatus
   } = useContent();
   const { setCurrentRoute } = useAuth();
 
@@ -127,6 +132,14 @@ export default function Home() {
     };
   }, []);
 
+  useEffect(() => {
+    recentItems.slice(0, 6).forEach((item) => refreshProviderStatus(item));
+    const interval = window.setInterval(() => {
+      recentItems.slice(0, 6).forEach((item) => refreshProviderStatus(item));
+    }, 60000);
+    return () => window.clearInterval(interval);
+  }, [recentItems.length]);
+
   return (
     <div className="pt-24 md:pt-28 px-5 md:px-12 max-w-7xl mx-auto space-y-8 pb-24">
       {/* Hero Banner */}
@@ -234,6 +247,91 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {recentItems.length > 0 && (
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <span className="material-symbols-outlined text-cyan-300">history</span>
+                Recently Visited
+              </h2>
+              <p className="text-xs text-zinc-500 mt-1">Your latest provider visits, saved on this device.</p>
+            </div>
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-zinc-500">{recentItems.length} saved</span>
+                <button onClick={clearHistory} className="text-xs font-semibold text-rose-300 hover:text-rose-200">Clear history</button>
+              </div>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            {recentItems.slice(0, 6).map((item) => {
+              const status = getProviderStatus(item);
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => openItemModal(item)}
+                  className="text-left rounded-2xl border border-white/10 bg-white/[0.03] p-2 hover:bg-white/[0.07] hover:border-purple-500/40 transition-all"
+                >
+                  <div className="aspect-[4/3] rounded-xl overflow-hidden bg-zinc-900 mb-2">
+                    <img src={item.bannerUrl} alt={item.title} className="w-full h-full object-contain" />
+                  </div>
+                  <p className="text-xs font-semibold text-white truncate">{item.title}</p>
+                  <span className={`inline-flex items-center gap-1 mt-1 text-[9px] ${status.tone}`}>
+                    <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
+                    {status.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {recentItems.some((item) => item.progress > 0 && item.progress < 100) && (
+        <section className="space-y-4">
+          <div>
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <span className="material-symbols-outlined text-amber-300">play_circle</span>
+              Continue Browsing
+            </h2>
+            <p className="text-xs text-zinc-500 mt-1">Pick up where you left off.</p>
+          </div>
+          <div className="space-y-2">
+            {recentItems.filter((item) => item.progress > 0 && item.progress < 100).slice(0, 4).map((item) => (
+              <button
+                key={item.id}
+                onClick={() => openItemModal(item)}
+                className="w-full flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-2.5 text-left hover:bg-white/[0.07] transition-all"
+              >
+                <img src={item.bannerUrl} alt="" className="h-12 w-16 rounded-xl object-contain bg-zinc-900" />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-semibold text-white">{item.title}</span>
+                  <span className="mt-1 block h-1.5 overflow-hidden rounded-full bg-white/10">
+                    <span className="block h-full rounded-full bg-purple-500" style={{ width: `${item.progress}%` }} />
+                  </span>
+                </span>
+                <span className="text-xs font-semibold text-purple-300">{item.progress}%</span>
+                <span className="material-symbols-outlined text-zinc-500">chevron_right</span>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {recommendedItems.length > 0 && (
+        <section className="space-y-4">
+          <div>
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <span className="material-symbols-outlined text-purple-300">auto_awesome</span>
+              Picked for You
+            </h2>
+            <p className="text-xs text-zinc-500 mt-1">{recommendationReason}.</p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            {recommendedItems.map((item) => <ContentCard key={item.id} item={item} />)}
+          </div>
+        </section>
+      )}
 
       {/* Search Bar & Filters */}
       <section className="space-y-4">

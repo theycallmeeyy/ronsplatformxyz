@@ -100,3 +100,53 @@ export async function getUserById(id) {
   const users = await getUsers();
   return users.find((u) => u.id === id);
 }
+
+export async function getRatings(siteId) {
+  const db = await loadDb();
+  const ratings = db.meta?.ratings || {};
+  return siteId ? (ratings[siteId] || { totalScore: 0, count: 0, byUser: {} }) : ratings;
+}
+
+export async function addOrUpdateRating(siteId, userId, score) {
+  const db = await loadDb();
+  db.meta = db.meta || {};
+  db.meta.ratings = db.meta.ratings || {};
+  const entry = db.meta.ratings[siteId] || { totalScore: 0, count: 0, byUser: {} };
+  const previous = entry.byUser?.[userId];
+  if (previous !== undefined) {
+    entry.totalScore = Math.max(0, Number(entry.totalScore) - Number(previous) + Number(score));
+  } else {
+    entry.totalScore = Number(entry.totalScore) + Number(score);
+    entry.count = Number(entry.count || 0) + 1;
+  }
+  entry.byUser = entry.byUser || {};
+  entry.byUser[userId] = Number(score);
+  db.meta.ratings[siteId] = entry;
+  await saveDb(db);
+  return entry;
+}
+
+export async function getComments(siteId) {
+  const db = await loadDb();
+  const comments = db.meta?.comments || {};
+  return siteId ? (comments[siteId] || []) : comments;
+}
+
+export async function addComment(siteId, userId, comment, useful, author) {
+  const db = await loadDb();
+  db.meta = db.meta || {};
+  db.meta.comments = db.meta.comments || {};
+  const comments = db.meta.comments[siteId] || [];
+  const entry = {
+    id: `comment-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    userId,
+    author: String(author || userId || 'Guest'),
+    comment: String(comment || '').trim(),
+    useful: Boolean(useful),
+    createdAt: new Date().toISOString()
+  };
+  comments.unshift(entry);
+  db.meta.comments[siteId] = comments;
+  await saveDb(db);
+  return entry;
+}

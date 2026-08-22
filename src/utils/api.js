@@ -95,3 +95,37 @@ export async function fetchPwaStatus() {
   });
   return response.json();
 }
+
+export async function fetchUserData() {
+  const response = await fetch(`${API_BASE_URL}/api/user/data`, {
+    method: 'GET',
+    credentials: 'include'
+  });
+  return response.json();
+}
+
+export async function saveUserData(data) {
+  const response = await fetch(`${API_BASE_URL}/api/user/data`, {
+    method: 'PUT',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  return response.json();
+}
+
+export async function clearUserHistory() {
+  const response = await fetch(`${API_BASE_URL}/api/user/history`, {
+    method: 'DELETE',
+    credentials: 'include'
+  });
+  return response.json();
+}
+
+export async function checkProviderStatus(url) {
+  const response = await fetch(`${API_BASE_URL}/api/providers/status?url=${encodeURIComponent(url)}`, {
+    method: 'GET',
+    credentials: 'include'
+  });
+  return response.json();
+}

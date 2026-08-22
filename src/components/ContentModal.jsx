@@ -2,61 +2,11 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useContent } from '../context/ContentContext';
 import { fetchRatings, submitRating, fetchComments, submitComment } from '../utils/api';
-
-const BADWARE_PATTERNS = [
-  'malware',
-  'badware',
-  'spy',
-  'phishing',
-  'tracking',
-  'track',
-  'redirect',
-  'popup',
-  'click',
-  'adservice',
-  'doubleclick',
-  'junk',
-  'scam',
-  'adsystem',
-  'advert',
-  'tracker',
-  'analytics'
-];
-
-const POPUP_BLOCK_FEATURES = [
-  'Pop-up blocker active',
-  'Adblock enabled',
-  'In-app browser sandboxed'
-];
-
-function assessUrlSafety(url) {
-  if (!url) {
-    return {
-      blocked: false,
-      label: 'No external stream URL available',
-      summary: 'This item does not have a direct provider link.'
-    };
-  }
-
-  const lowerUrl = url.toLowerCase();
-  const blocked = BADWARE_PATTERNS.some((pattern) => lowerUrl.includes(pattern));
-
-  return blocked
-    ? {
-        blocked: true,
-        label: 'Malicious URL Blocked',
-        summary: 'This link has been flagged by the in-app Malware Protection filter and will not be opened outside Ronkws.'
-      }
-    : {
-        blocked: false,
-        label: 'Protected in-app stream',
-        summary: 'This provider link will run inside Ronkws with pop-up and ad protection enabled.'
-      };
-}
+import { assessUrlSafety } from '../utils/linkSafety';
 
 export default function ContentModal() {
   const { activeModalItem, closeModalModal, favorites, toggleFavorite } = useContent();
-  const { user, currentRoute } = useAuth();
+  const { user, currentRoute, setCurrentRoute } = useAuth();
   const [showExternalFrame, setShowExternalFrame] = useState(false);
   const [blockedUrl, setBlockedUrl] = useState(false);
   const [rating, setRating] = useState({ totalScore: 0, count: 0, avg: 0, userScore: 0 });
@@ -69,10 +19,8 @@ export default function ContentModal() {
   const [commentLoading, setCommentLoading] = useState(false);
   const [showComments, setShowComments] = useState(false);
 
-  if (!activeModalItem) return null;
-  const isFav = favorites.includes(activeModalItem.id);
-  const externalUrl = activeModalItem.url || '';
-  const { setCurrentRoute } = useAuth();
+  const isFav = favorites.includes(activeModalItem?.id);
+  const externalUrl = activeModalItem?.url || '';
   const safety = useMemo(() => assessUrlSafety(externalUrl), [externalUrl]);
   const canEmbedExternal = useMemo(
     () => Boolean(activeModalItem?.embedUrl?.trim()),
@@ -81,45 +29,20 @@ export default function ContentModal() {
 
   const openExternalLink = () => {
     if (!externalUrl) return;
-    // Push a state to history so back button brings user to home
-    window.history.pushState({ source: 'ronkws_platform', timestamp: Date.now() }, '', window.location.href);
-    
-    // Prevent accidental navigation away - warn user if they try to close/leave
-    const handleBeforeUnload = (e) => {
-      e.preventDefault();
-      e.returnValue = '';
-      return '';
-    };
-    
-    const newWindow = window.open(externalUrl, '_blank', 'noopener,noreferrer');
-    if (newWindow) {
-      newWindow.focus();
-    } else {
-      // If popup was blocked, remove the history entry we just added
-      window.history.back();
-      alert('Please allow popups to access external platforms');
-    }
+    setCurrentRoute('home');
+    closeModalModal();
+    window.location.assign(externalUrl);
   };
-
-  // Handle browser back button to return to home
-  useEffect(() => {
-    const handlePopState = (event) => {
-      if (event.state?.source === 'ronkws_platform') {
-        // Ensure we close modal and go to home
-        closeModalModal();
-        setCurrentRoute('home');
-        // Prevent going back further
-        window.history.pushState({ source: 'ronkws_home_guard' }, '', window.location.href);
-      }
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [closeModalModal, setCurrentRoute]);
 
   useEffect(() => {
     if (!activeModalItem) return;
     let mounted = true;
+    setRating({ totalScore: 0, count: 0, avg: 0, userScore: 0 });
+    setUserRating(0);
+    setComments([]);
+    setCommentText('');
+    setCommentError('');
+    setShowComments(false);
     (async () => {
       try {
         const res = await fetchRatings(activeModalItem.id);
@@ -161,6 +84,8 @@ export default function ContentModal() {
       closeModalModal();
     }
   }, [activeModalItem, currentRoute, closeModalModal]);
+
+  if (!activeModalItem) return null;
 
   const openInAppStream = () => {
     if (!externalUrl) return;
@@ -365,11 +290,12 @@ export default function ContentModal() {
                             type="button"
                             onClick={async () => {
                               const selectedRating = idx + 1;
-                              setUserRating(selectedRating);
+                              if (submitting) return;
                               setSubmitting(true);
                               try {
                                 const res = await submitRating(activeModalItem.id, selectedRating);
                                 if (res?.success && res.rating) {
+                                  setUserRating(selectedRating);
                                   const avg = res.rating.count ? (res.rating.totalScore / res.rating.count) : 0;
                                   setRating({
                                     totalScore: res.rating.totalScore || 0,
@@ -386,6 +312,8 @@ export default function ContentModal() {
                               }
                               setSubmitting(false);
                             }}
+                            disabled={submitting}
+                            aria-label={`Rate ${idx + 1} out of 5`}
                             className={`material-symbols-outlined text-[20px] ${userRating >= idx + 1 ? 'text-yellow-400' : 'text-zinc-600'} transition-colors`}
                           >
                             star

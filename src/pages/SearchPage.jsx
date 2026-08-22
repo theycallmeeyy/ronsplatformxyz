@@ -10,7 +10,8 @@ export default function SearchPage() {
     selectedCategory,
     setSelectedCategory,
     sortBy,
-    setSortBy
+    setSortBy,
+    recentItems
   } = useContent();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerVisible, setDrawerVisible] = useState(false);
@@ -63,6 +64,21 @@ export default function SearchPage() {
             </button>
           )}
         </div>
+
+        {recentItems.length > 0 && (
+          <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar pb-1">
+            <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">Recent</span>
+            {recentItems.slice(0, 5).map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setSearchQuery(item.title)}
+                className="shrink-0 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-zinc-300 hover:border-purple-500/40 hover:text-white"
+              >
+                {item.title}
+              </button>
+            ))}
+          </div>
+        )}
 
         <div className="flex items-center justify-between gap-4 md:hidden">
           <p className="text-xs text-zinc-400">

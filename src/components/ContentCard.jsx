@@ -2,10 +2,11 @@ import React from 'react';
 import { useContent } from '../context/ContentContext';
 
 export default function ContentCard({ item }) {
-  const { favorites, toggleFavorite, openItemModal } = useContent();
+  const { favorites, toggleFavorite, openItemModal, getProviderStatus } = useContent();
   const isFav = favorites.includes(item.id);
   const isLogoBanner = item.bannerUrl?.includes('/logo/') || item.bannerUrl?.includes('/socials/') || item.bannerUrl?.includes('/logo');
   const ratingValue = Number(item.rating) || 0;
+  const providerStatus = getProviderStatus(item);
 
   return (
     <div className="rounded-2xl sm:rounded-[20px] overflow-hidden group relative border border-white/10 bg-[#0d0b14] shadow-[0_10px_24px_rgba(0,0,0,0.16)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(79,63,218,0.18)]">
@@ -29,25 +30,31 @@ export default function ContentCard({ item }) {
           <span className="text-[9px] uppercase tracking-[0.24em] text-zinc-400 font-semibold">
             {item.category}
           </span>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleFavorite(item.id);
-            }}
-            className={`rounded-full p-1.5 sm:p-2 transition-all ${
-              isFav
-                ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                : 'bg-white/5 text-zinc-300 hover:bg-white/10 hover:text-white border border-white/10'
-            }`}
-            title={isFav ? 'Remove from favorites' : 'Add to favorites'}
-          >
-            <span
-              className="material-symbols-outlined text-[14px] sm:text-[16px]"
-              style={{ fontVariationSettings: `'FILL' ${isFav ? 1 : 0}` }}
-            >
-              favorite
+          <div className="flex items-center gap-1.5">
+            <span className={`inline-flex items-center gap-1 text-[8px] font-semibold ${providerStatus.tone}`} title={providerStatus.label}>
+              <span className={`h-1.5 w-1.5 rounded-full ${providerStatus.dot}`} />
+              <span className="hidden sm:inline">{providerStatus.label}</span>
             </span>
-          </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleFavorite(item.id);
+              }}
+              className={`rounded-full p-1.5 sm:p-2 transition-all ${
+                isFav
+                  ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                  : 'bg-white/5 text-zinc-300 hover:bg-white/10 hover:text-white border border-white/10'
+              }`}
+              title={isFav ? 'Remove from favorites' : 'Add to favorites'}
+            >
+              <span
+                className="material-symbols-outlined text-[14px] sm:text-[16px]"
+                style={{ fontVariationSettings: `'FILL' ${isFav ? 1 : 0}` }}
+              >
+                favorite
+              </span>
+            </button>
+          </div>
         </div>
 
         <div>

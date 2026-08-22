@@ -4,7 +4,7 @@ import { useContent } from '../context/ContentContext';
 
 export default function AdminDashboard() {
   const { users, toggleUserRole, toggleUserBlock, deleteUser } = useAuth();
-  const { items, addContent, updateContent, deleteContent, toggleTrending } = useContent();
+  const { items, addContent, updateContent, deleteContent, toggleTrending, analyticsItems, trafficByDay, getProviderStatus, getProviderReliability } = useContent();
 
   const [activeTab, setActiveTab] = useState('content'); // 'content', 'trending', or 'users'
   const trendingItems = items.filter((item) => item.isTrending);
@@ -82,6 +82,20 @@ export default function AdminDashboard() {
     setShowModal(false);
   };
 
+  const exportAnalyticsCsv = () => {
+    const escapeCell = (value) => `"${String(value ?? '').replaceAll('"', '""')}"`;
+    const rows = [
+      ['Rank', 'Provider', 'Category', 'Clicks', 'Monthly reliability'],
+      ...analyticsItems.map((item, index) => [index + 1, item.title, item.category, item.clickCount, getProviderReliability(item) ?? 'No checks'])
+    ];
+    const csv = rows.map((row) => row.map(escapeCell).join(',')).join('\n');
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    link.download = `ronkws-provider-analytics-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  };
+
   return (
     <div className="pt-24 md:pt-28 px-5 md:px-12 max-w-7xl mx-auto space-y-8 pb-24">
       {/* Header */}
@@ -126,6 +140,57 @@ export default function AdminDashboard() {
         <div className="glass-card p-5 rounded-2xl border border-white/10 space-y-1">
           <span className="text-xs font-semibold text-zinc-400 uppercase">Total Views</span>
           <p className="text-2xl font-black text-emerald-400">14.8M</p>
+        </div>
+      </section>
+
+      <section className="glass-card rounded-3xl border border-white/10 overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-5 border-b border-white/10">
+          <div>
+            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <span className="material-symbols-outlined text-cyan-300">insights</span>
+              Provider Analytics
+            </h2>
+            <p className="text-xs text-zinc-400 mt-1">Most-clicked platforms from this device.</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-zinc-500">{analyticsItems.reduce((total, item) => total + item.clickCount, 0)} total opens</span>
+            <button onClick={exportAnalyticsCsv} className="rounded-xl bg-cyan-500/10 px-3 py-2 text-xs font-semibold text-cyan-200 hover:bg-cyan-500/20">Export CSV</button>
+          </div>
+        </div>
+        <div className="p-5 border-b border-white/10">
+          <div className="flex items-end gap-2 h-32">
+            {trafficByDay.map((day) => {
+              const maxClicks = Math.max(...trafficByDay.map((entry) => entry.clicks), 1);
+              return (
+                <div key={day.label} className="flex-1 h-full flex flex-col items-center justify-end gap-2">
+                  <span className="text-[10px] text-zinc-400">{day.clicks}</span>
+                  <div className="w-full max-w-10 rounded-t-lg bg-gradient-to-t from-purple-700 to-cyan-400" style={{ height: `${Math.max(8, (day.clicks / maxClicks) * 78)}%` }} />
+                  <span className="text-[10px] font-semibold text-zinc-500">{day.label}</span>
+                </div>
+              );
+            })}
+          </div>
+          <p className="mt-3 text-[10px] uppercase tracking-[0.18em] text-zinc-500">Daily provider opens, last 7 days ({trafficByDay.reduce((total, day) => total + day.clicks, 0)} this week)</p>
+        </div>
+        <div className="divide-y divide-white/5">
+          {analyticsItems.slice(0, 5).map((item, index) => {
+            const status = getProviderStatus(item);
+            return (
+              <div key={item.id} className="flex items-center gap-3 px-5 py-3">
+                <span className="w-5 text-xs font-bold text-zinc-500">{index + 1}</span>
+                <img src={item.bannerUrl} alt="" className="h-9 w-12 rounded-lg bg-zinc-900 object-contain" />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-semibold text-white">{item.title}</span>
+                  <span className={`inline-flex items-center gap-1 text-[10px] ${status.tone}`}>
+                    <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
+                    {status.label}
+                  </span>
+                  {getProviderReliability(item) !== null && <span className="ml-2 text-[10px] text-zinc-500">{getProviderReliability(item)}% monthly</span>}
+                </span>
+                <span className="text-sm font-bold text-purple-300">{item.clickCount}</span>
+              </div>
+            );
+          })}
         </div>
       </section>
 

@@ -66,7 +66,9 @@ export function AuthProvider({ children }) {
     return {
       darkMode: true,
       notifications: true,
-      autoplay: true
+      autoplay: true,
+      analyticsTracking: true,
+      browsingHistory: true
     };
   });
   const [authLoaded, setAuthLoaded] = useState(false);
@@ -85,8 +87,19 @@ export function AuthProvider({ children }) {
 
   const updatePreference = (key, value) => {
     setPreferences((prev) => ({ ...prev, [key]: value }));
-    const label = key === 'darkMode' ? 'Dark Mode' : key === 'notifications' ? 'Notifications' : 'Autoplay Next Episode';
+    const labels = {
+      darkMode: 'Dark Mode',
+      notifications: 'Notifications',
+      autoplay: 'Autoplay Next Episode',
+      analyticsTracking: 'Usage analytics',
+      browsingHistory: 'Browsing history'
+    };
+    const label = labels[key] || key;
     showToast(`${label} ${value ? 'enabled' : 'disabled'}`, 'info');
+  };
+
+  const replacePreferences = (nextPreferences) => {
+    setPreferences((prev) => ({ ...prev, ...nextPreferences }));
   };
 
   const scheduleRefresh = (expiresAt) => {
@@ -551,6 +564,11 @@ export function AuthProvider({ children }) {
   // Wrapper for setCurrentRoute to validate route and prevent blank screens
   const validRoutes = ['home', 'trending', 'favorites', 'search', 'profile', 'admin', 'dmca', 'login'];
   const setCurrentRouteWithValidation = useCallback((route) => {
+    if (route === 'admin' && user?.role !== 'admin') {
+      console.warn('Admin route requires administrator access, defaulting to home');
+      setCurrentRoute('home');
+      return;
+    }
     if (validRoutes.includes(route)) {
       setCurrentRoute(route);
     } else {
@@ -564,23 +582,6 @@ export function AuthProvider({ children }) {
     setCurrentRouteWithValidation('home');
     introStartedRef.current = false;
   };
-
-  // Handle browser back button to redirect to home when pressing back from platform links
-  useEffect(() => {
-    const handlePopState = (event) => {
-      if (event.state?.source === 'ronkws_platform') {
-        setCurrentRouteWithValidation('home');
-        // Push a guard state to prevent going back further
-        window.history.pushState({ source: 'ronkws_home_guard' }, '', window.location.href);
-      } else if (event.state?.source === 'ronkws_home_guard') {
-        // Already at home, prevent going back
-        window.history.pushState({ source: 'ronkws_home_guard' }, '', window.location.href);
-      }
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [setCurrentRouteWithValidation]);
 
   return (
     <AuthContext.Provider
@@ -604,6 +605,7 @@ export function AuthProvider({ children }) {
         toggleUserBlock,
         deleteUser,
         updatePreference,
+        replacePreferences,
         completeIntroAnimation
       }}
     >
