@@ -3,7 +3,6 @@ import {
   LogOut,
   Menu,
   Moon,
-  Search,
   Sun,
   UserRound,
   X
@@ -12,9 +11,7 @@ import { useAuth } from '../context/AuthContext';
 
 const PUBLIC_LINKS = [
   ['home', 'Directory'],
-  ['trending', 'Trending'],
-  ['favorites', 'Favorites'],
-  ['search', 'Search'],
+  ['request', 'Request a Site'],
   ['dmca', 'DMCA']
 ];
 
@@ -48,17 +45,6 @@ export default function Navigation() {
           </button>
 
           <div className="directory-header-actions">
-            <button
-              type="button"
-              onClick={() => navigateTo('search')}
-              className="header-icon-button header-search-button"
-              title="Search providers"
-              aria-label="Search providers"
-            >
-              <Search size={19} />
-              <span>Search</span>
-              <kbd>/</kbd>
-            </button>
             <a
               className="header-icon-button header-social-link"
               href="https://discord.gg/bazxR8fA43"

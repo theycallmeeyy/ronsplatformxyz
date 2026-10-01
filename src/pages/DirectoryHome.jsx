@@ -16,7 +16,6 @@ const CATEGORY_SECTIONS = [
 export default function DirectoryHome() {
   const {
     items,
-    filteredItems,
     favorites,
     selectedCategory,
     setSelectedCategory,
@@ -27,7 +26,6 @@ export default function DirectoryHome() {
     () => sessionStorage.getItem('ronkws_safety_note_dismissed') !== 'true'
   );
   const searchRef = useRef(null);
-
   const categories = useMemo(() => {
     const available = new Set(items.map((item) => item.category));
     return CATEGORY_SECTIONS.filter((section) => section.categories.some((category) => available.has(category)))
@@ -48,7 +46,7 @@ export default function DirectoryHome() {
   useEffect(() => {
     const focusSearch = (event) => {
       const target = event.target;
-      if (event.key !== '/' || target instanceof HTMLElement && (target.isContentEditable || /INPUT|TEXTAREA|SELECT/.test(target.tagName))) return;
+      if (event.key !== '/' || (target instanceof HTMLElement && (target.isContentEditable || /INPUT|TEXTAREA|SELECT/.test(target.tagName)))) return;
       event.preventDefault();
       searchRef.current?.focus();
     };
@@ -64,6 +62,15 @@ export default function DirectoryHome() {
     sessionStorage.setItem('ronkws_safety_note_dismissed', 'true');
     setShowSafetyNote(false);
   };
+
+  const searchFilteredItems = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return items;
+    return items.filter((item) =>
+      [item.title, item.description, item.category, item.url]
+        .some((value) => value?.toLowerCase().includes(query))
+    );
+  }, [items, searchQuery]);
 
   return (
     <div className="directory-page">
@@ -98,12 +105,11 @@ export default function DirectoryHome() {
               placeholder="Search sites and categories"
               aria-label="Search providers"
             />
-            {searchQuery && (
+            {searchQuery ? (
               <button type="button" onClick={() => setSearchQuery('')} title="Clear search" aria-label="Clear search">
                 <X size={16} />
               </button>
-            )}
-            {!searchQuery && <kbd>/</kbd>}
+            ) : <kbd>/</kbd>}
           </label>
           <div className="directory-region" aria-label="Catalog region">
             <Globe2 size={17} aria-hidden="true" />
@@ -133,7 +139,7 @@ export default function DirectoryHome() {
 
           <div id="provider-directory" className="provider-directory">
             {visibleCategories.map(({ key, categories: sourceCategories, count }, index) => {
-            const categoryItems = filteredItems.filter((item) => sourceCategories.includes(item.category));
+            const categoryItems = searchFilteredItems.filter((item) => sourceCategories.includes(item.category));
             if (!categoryItems.length) return null;
             return (
               <section
@@ -154,14 +160,11 @@ export default function DirectoryHome() {
               </section>
             );
           })}
-          {filteredItems.length === 0 && (
+          {searchFilteredItems.length === 0 && (
             <div className="directory-empty">
               <Search size={26} />
-              <h2>No providers found</h2>
-              <p>Try another name or category.</p>
-              <button type="button" onClick={() => { setSearchQuery(''); setSelectedCategory('All'); }}>
-                Reset filters
-              </button>
+              <h2>{items.length === 0 ? 'No providers available' : 'No providers found'}</h2>
+              <p>{items.length === 0 ? 'The provider directory is currently empty.' : 'Try another provider or category name.'}</p>
             </div>
             )}
           </div>
@@ -175,7 +178,16 @@ export default function DirectoryHome() {
             <strong>Before opening an external link</strong>
             <span>Use a trusted content blocker to reduce intrusive ads and pop-ups.</span>
           </div>
-          <a href="https://ublockorigin.com/" target="_blank" rel="noreferrer noopener">uBlock Origin</a>
+          <div className="safety-note-links">
+            <a href="https://brave.com/download/" target="_blank" rel="noreferrer noopener">
+              <img src="https://brave.com/static-assets/images/brave-logo-sans-text.svg" alt="" />
+              Brave Download
+            </a>
+            <a href="https://ublockorigin.com/" target="_blank" rel="noreferrer noopener">
+              <img src="https://ublockorigin.com/img/logo/uBlock-Origin.svg?v=1.1" alt="" />
+              uBlock Origin
+            </a>
+          </div>
           <button type="button" onClick={dismissSafetyNote} title="Dismiss notice" aria-label="Dismiss safety notice">
             <X size={18} />
           </button>

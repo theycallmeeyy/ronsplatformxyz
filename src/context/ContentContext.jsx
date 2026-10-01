@@ -82,6 +82,13 @@ export function ContentProvider({ children }) {
     }
     return {};
   });
+  const [siteRequests, setSiteRequests] = useState(() => {
+    const saved = localStorage.getItem('ronkws_site_requests');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (error) { console.error(error); }
+    }
+    return [];
+  });
 
   // Currently active filter & search states
   const [searchQuery, setSearchQuery] = useState('');
@@ -114,6 +121,10 @@ export function ContentProvider({ children }) {
   useEffect(() => {
     localStorage.setItem('ronkws_provider_history', JSON.stringify(providerHistory));
   }, [providerHistory]);
+
+  useEffect(() => {
+    localStorage.setItem('ronkws_site_requests', JSON.stringify(siteRequests));
+  }, [siteRequests]);
 
   useEffect(() => {
     let cancelled = false;
@@ -396,6 +407,18 @@ export function ContentProvider({ children }) {
     showToast(`Deleted "${item?.title || 'item'}" from catalog`, 'info');
   };
 
+  const addSiteRequest = (request) => {
+    const entry = {
+      ...request,
+      id: `request-${Date.now()}`,
+      status: 'pending',
+      submittedAt: request.submittedAt || new Date().toISOString()
+    };
+    setSiteRequests((prev) => [entry, ...prev]);
+    showToast('Your site request was submitted for review.', 'success');
+    return entry;
+  };
+
   // Filtered & Sorted items memoized
   const filteredItems = useMemo(() => {
     return items
@@ -430,6 +453,7 @@ export function ContentProvider({ children }) {
     <ContentContext.Provider
       value={{
         items,
+        siteRequests,
         filteredItems,
         favoriteItems,
         favorites,
@@ -460,7 +484,8 @@ export function ContentProvider({ children }) {
         closeModalModal,
         addContent,
         updateContent,
-        deleteContent
+        deleteContent,
+        addSiteRequest
       }}
     >
       {children}

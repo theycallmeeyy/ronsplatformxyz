@@ -572,7 +572,7 @@ export function AuthProvider({ children }) {
   };
 
   // Wrapper for setCurrentRoute to validate route and prevent blank screens
-  const validRoutes = ['home', 'trending', 'favorites', 'search', 'profile', 'admin', 'dmca'];
+  const validRoutes = ['home', 'trending', 'favorites', 'search', 'profile', 'admin', 'dmca', 'request'];
   const setCurrentRouteWithValidation = useCallback((route) => {
     if ((route === 'admin' && user?.role !== 'admin') || (route === 'profile' && !user)) {
       console.warn(`Route ${route} requires an authenticated account, defaulting to home`);
