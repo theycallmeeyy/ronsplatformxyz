@@ -25,7 +25,8 @@ class CustomNavigationBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 32),
       decoration: BoxDecoration(
         color: AppTheme.background.withOpacity(0.85),
-        border: const Border(bottom: BorderSide(color: AppTheme.glassBorder, width: 1)),
+        border: const Border(
+            bottom: BorderSide(color: AppTheme.glassBorder, width: 1)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -35,7 +36,7 @@ class CustomNavigationBar extends StatelessWidget {
             cursor: SystemMouseCursors.click,
             child: GestureDetector(
               onTap: () {
-                if (auth.isAuthenticated) auth.setCurrentRoute('home');
+                if (auth.ageVerified) auth.setCurrentRoute('home');
               },
               child: Row(
                 children: [
@@ -65,7 +66,8 @@ class CustomNavigationBar extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   ShaderMask(
-                    shaderCallback: (bounds) => AppTheme.textGradient.createShader(bounds),
+                    shaderCallback: (bounds) =>
+                        AppTheme.textGradient.createShader(bounds),
                     child: Text(
                       'Ronkws',
                       style: GoogleFonts.inter(
@@ -81,19 +83,29 @@ class CustomNavigationBar extends StatelessWidget {
           ),
 
           // Nav Links (Only when authenticated)
-          if (auth.isAuthenticated)
+          if (auth.ageVerified)
             Row(
               children: [
-                _navButton(context, auth, label: 'Home', route: 'home', icon: Icons.home),
+                _navButton(context, auth,
+                    label: 'Home', route: 'home', icon: Icons.home),
                 const SizedBox(width: 24),
-                _navButton(context, auth, label: 'Trending', route: 'trending', icon: Icons.trending_up),
+                _navButton(context, auth,
+                    label: 'Trending',
+                    route: 'trending',
+                    icon: Icons.trending_up),
                 const SizedBox(width: 24),
-                _navButton(context, auth, label: 'Favorites', route: 'favorites', icon: Icons.star),
+                _navButton(context, auth,
+                    label: 'Favorites', route: 'favorites', icon: Icons.star),
                 const SizedBox(width: 24),
-                _navButton(context, auth, label: 'Search', route: 'search', icon: Icons.search),
+                _navButton(context, auth,
+                    label: 'Search', route: 'search', icon: Icons.search),
                 if (auth.isAdmin) ...[
                   const SizedBox(width: 24),
-                  _navButton(context, auth, label: 'Admin', route: 'admin', icon: Icons.admin_panel_settings, isAdminBtn: true),
+                  _navButton(context, auth,
+                      label: 'Admin',
+                      route: 'admin',
+                      icon: Icons.admin_panel_settings,
+                      isAdminBtn: true),
                 ],
               ],
             ),
@@ -105,7 +117,8 @@ class CustomNavigationBar extends StatelessWidget {
                 GestureDetector(
                   onTap: () => auth.setCurrentRoute('profile'),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.05),
                       borderRadius: BorderRadius.circular(24),
@@ -115,13 +128,18 @@ class CustomNavigationBar extends StatelessWidget {
                       children: [
                         CircleAvatar(
                           radius: 16,
-                          backgroundColor: AppTheme.primaryPurple.withOpacity(0.4),
-                          backgroundImage: NetworkImage(auth.currentUser?.avatar ?? ''),
+                          backgroundColor:
+                              AppTheme.primaryPurple.withOpacity(0.4),
+                          backgroundImage:
+                              NetworkImage(auth.currentUser?.avatar ?? ''),
                         ),
                         const SizedBox(width: 10),
                         Text(
                           auth.currentUser?.name ?? '',
-                          style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white),
+                          style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white),
                         ),
                       ],
                     ),
@@ -129,21 +147,14 @@ class CustomNavigationBar extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 IconButton(
-                  icon: const Icon(Icons.logout, color: AppTheme.textSecondary, size: 20),
+                  icon: const Icon(Icons.logout,
+                      color: AppTheme.textSecondary, size: 20),
                   onPressed: () => auth.logout(),
                   tooltip: 'Sign Out',
                 ),
-              ] else ...[
-                ElevatedButton(
-                  onPressed: () => auth.setCurrentRoute('login'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryPurple,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                  ),
-                  child: const Text('Sign In', style: TextStyle(fontWeight: FontWeight.bold)),
-                ),
+              ] else if (auth.ageVerified) ...[
+                const Text('Guest session',
+                    style: TextStyle(color: AppTheme.textSecondary)),
               ],
             ],
           ),
@@ -159,7 +170,8 @@ class CustomNavigationBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
         color: AppTheme.background.withOpacity(0.85),
-        border: const Border(bottom: BorderSide(color: AppTheme.glassBorder, width: 1)),
+        border: const Border(
+            bottom: BorderSide(color: AppTheme.glassBorder, width: 1)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -180,17 +192,23 @@ class CustomNavigationBar extends StatelessWidget {
                   ],
                 ),
                 child: Center(
-                  child: Text('R', style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.white)),
+                  child: Text('R',
+                      style: GoogleFonts.inter(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white)),
                 ),
               ),
               const SizedBox(width: 10),
               Text(
                 'Ronkws',
-                style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.lightPurple),
+                style: GoogleFonts.inter(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.lightPurple),
               ),
             ],
           ),
-
           if (auth.isAuthenticated)
             GestureDetector(
               onTap: () => auth.setCurrentRoute('profile'),
@@ -200,16 +218,9 @@ class CustomNavigationBar extends StatelessWidget {
                 backgroundImage: NetworkImage(auth.currentUser?.avatar ?? ''),
               ),
             )
-          else
-            ElevatedButton(
-              onPressed: () => auth.setCurrentRoute('login'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryPurple,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              ),
-              child: const Text('Sign In', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-            ),
+          else if (auth.ageVerified)
+            const Text('Guest',
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
         ],
       ),
     );
@@ -236,7 +247,8 @@ class CustomNavigationBar extends StatelessWidget {
         padding: const EdgeInsets.only(bottom: 4),
         decoration: BoxDecoration(
           border: isSelected
-              ? const Border(bottom: BorderSide(color: AppTheme.primaryPurple, width: 2))
+              ? const Border(
+                  bottom: BorderSide(color: AppTheme.primaryPurple, width: 2))
               : null,
         ),
         child: Row(
@@ -264,13 +276,14 @@ class MobileBottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
-    if (!auth.isAuthenticated) return const SizedBox.shrink();
+    if (!auth.ageVerified) return const SizedBox.shrink();
 
     return Container(
       height: 65,
       decoration: BoxDecoration(
         color: const Color(0xF2181622),
-        border: const Border(top: BorderSide(color: AppTheme.glassBorder, width: 1)),
+        border: const Border(
+            top: BorderSide(color: AppTheme.glassBorder, width: 1)),
         boxShadow: [
           BoxShadow(
             color: AppTheme.primaryPurple.withOpacity(0.15),
@@ -282,17 +295,24 @@ class MobileBottomNavBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _navItem(context, auth, label: 'Home', route: 'home', icon: Icons.home),
-          _navItem(context, auth, label: 'Trending', route: 'trending', icon: Icons.trending_up),
-          _navItem(context, auth, label: 'Favorites', route: 'favorites', icon: Icons.star),
-          _navItem(context, auth, label: 'Search', route: 'search', icon: Icons.search),
-          _navItem(context, auth, label: 'Profile', route: 'profile', icon: Icons.person),
+          _navItem(context, auth,
+              label: 'Home', route: 'home', icon: Icons.home),
+          _navItem(context, auth,
+              label: 'Trending', route: 'trending', icon: Icons.trending_up),
+          _navItem(context, auth,
+              label: 'Favorites', route: 'favorites', icon: Icons.star),
+          _navItem(context, auth,
+              label: 'Search', route: 'search', icon: Icons.search),
+          if (auth.isAuthenticated)
+            _navItem(context, auth,
+                label: 'Profile', route: 'profile', icon: Icons.person),
         ],
       ),
     );
   }
 
-  Widget _navItem(BuildContext context, AuthProvider auth, {required String label, required String route, required IconData icon}) {
+  Widget _navItem(BuildContext context, AuthProvider auth,
+      {required String label, required String route, required IconData icon}) {
     final isSelected = auth.currentRoute == route;
 
     return GestureDetector(
@@ -309,14 +329,18 @@ class MobileBottomNavBar extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 22, color: isSelected ? AppTheme.lightPurple : AppTheme.textSecondary),
+            Icon(icon,
+                size: 22,
+                color:
+                    isSelected ? AppTheme.lightPurple : AppTheme.textSecondary),
             const SizedBox(height: 2),
             Text(
               label,
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
-                color: isSelected ? AppTheme.lightPurple : AppTheme.textSecondary,
+                color:
+                    isSelected ? AppTheme.lightPurple : AppTheme.textSecondary,
               ),
             ),
           ],

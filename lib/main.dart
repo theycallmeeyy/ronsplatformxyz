@@ -4,10 +4,10 @@ import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/content_provider.dart';
 import 'providers/toast_provider.dart';
+import 'screens/age_gate_screen.dart';
 import 'screens/admin_dashboard_screen.dart';
 import 'screens/favorites_screen.dart';
 import 'screens/home_screen.dart';
-import 'screens/login_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/search_screen.dart';
 import 'screens/trending_screen.dart';
@@ -72,30 +72,16 @@ class MainAppRouter extends StatelessWidget {
       );
     }
 
-    // Show Cinematic Intro Logo Animation if just logged in / registered
+    if (!auth.ageVerified) {
+      return AgeGateScreen(onContinue: auth.confirmAge);
+    }
+
     if (auth.playIntroAnimation) {
       return CinematicIntro(
         onComplete: () => auth.completeIntroAnimation(),
       );
     }
 
-    // Unauthenticated State (Login / Sign Up)
-    if (!auth.isAuthenticated) {
-      return const Stack(
-        children: [
-          Scaffold(
-            body: Column(
-              children: [
-                CustomNavigationBar(),
-                Expanded(child: LoginScreen()),
-              ],
-            ),
-          ),
-        ],
-      );
-    }
-
-    // Authenticated State with Router & Navigation
     Widget currentPage;
     switch (auth.currentRoute) {
       case 'trending':
@@ -108,10 +94,12 @@ class MainAppRouter extends StatelessWidget {
         currentPage = const SearchScreen();
         break;
       case 'profile':
-        currentPage = const ProfileScreen();
+        currentPage =
+            auth.isAuthenticated ? const ProfileScreen() : const HomeScreen();
         break;
       case 'admin':
-        currentPage = const AdminDashboardScreen();
+        currentPage =
+            auth.isAdmin ? const AdminDashboardScreen() : const HomeScreen();
         break;
       case 'home':
       default:

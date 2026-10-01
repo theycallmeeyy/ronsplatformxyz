@@ -75,10 +75,8 @@ export default function CinematicIntro({ onComplete }) {
           />
 
           {/* Logo Card */}
-          <div className="relative w-28 h-28 md:w-36 md:h-36 bg-gradient-to-br from-purple-700 via-purple-900 to-indigo-950 rounded-3xl border border-purple-500/40 shadow-[0_0_50px_rgba(124,58,237,0.6)] flex items-center justify-center overflow-hidden">
-            <span className="font-black text-6xl md:text-7xl text-white tracking-wider drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)]">
-              R
-            </span>
+          <div className="relative w-28 h-28 md:w-36 md:h-36 flex items-center justify-center overflow-visible">
+            <img src="/logo/ronkws-glass-mark.svg" alt="Ronkws" className="relative z-10 h-[88%] w-[76%] object-contain drop-shadow-[0_0_18px_rgba(255,255,255,0.3)]" />
 
             {/* Red Light Sweep Beam (Phase 2: sweep) */}
             {(phase === 'sweep' || phase === 'hold') && (

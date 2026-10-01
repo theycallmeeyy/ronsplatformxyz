@@ -11,7 +11,8 @@ class AuthProvider extends ChangeNotifier {
   List<UserModel> _users = [];
   UserModel? _currentUser;
   bool _playIntroAnimation = false;
-  String _currentRoute = 'login';
+  String _currentRoute = 'home';
+  bool _ageVerified = false;
   bool _isInitialized = false;
 
   AuthProvider({required this.toastProvider}) {
@@ -23,11 +24,23 @@ class AuthProvider extends ChangeNotifier {
   UserModel? get currentUser => _currentUser;
   bool get isAuthenticated => _currentUser != null;
   bool get isAdmin => _currentUser?.isAdmin ?? false;
+  bool get ageVerified => _ageVerified;
   bool get playIntroAnimation => _playIntroAnimation;
   String get currentRoute => _currentRoute;
   bool get isInitialized => _isInitialized;
 
+  void confirmAge() {
+    _ageVerified = true;
+    _currentRoute = 'home';
+    _playIntroAnimation = true;
+    notifyListeners();
+  }
+
   void setCurrentRoute(String route) {
+    if ((route == 'admin' && !isAdmin) ||
+        (route == 'profile' && !isAuthenticated)) {
+      route = 'home';
+    }
     _currentRoute = route;
     _saveCurrentRouteToPrefs();
     notifyListeners();
@@ -55,13 +68,13 @@ class AuthProvider extends ChangeNotifier {
         _currentRoute = savedRoute ?? 'home';
       } else {
         _currentUser = null;
-        _currentRoute = 'login';
+        _currentRoute = 'home';
       }
     } catch (e) {
       if (kDebugMode) print('Error loading AuthProvider state: $e');
       _users = List.from(InitialData.initialUsers);
       _currentUser = null;
-      _currentRoute = 'login';
+      _currentRoute = 'home';
     } finally {
       _isInitialized = true;
       notifyListeners();
@@ -165,7 +178,7 @@ class AuthProvider extends ChangeNotifier {
   void logout() {
     _currentUser = null;
     _playIntroAnimation = false;
-    _currentRoute = 'login';
+    _currentRoute = 'home';
     toastProvider.showToast('Logged out successfully', ToastType.info);
     _saveActiveUserToPrefs();
     _saveCurrentRouteToPrefs();

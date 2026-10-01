@@ -10,6 +10,10 @@ const CATALOG_VERSION = 2;
 const CATALOG_STORAGE_KEY = 'ronkws_catalog_v2';
 const WATCH_HISTORY_STORAGE_KEY = 'ronkws_watch_history_v2';
 const CLICK_ANALYTICS_STORAGE_KEY = 'ronkws_click_analytics_v2';
+const CATEGORY_FILTER_GROUPS = {
+  'Movies & Shows': ['Movies', 'TV Shows'],
+  'Live TV & Sports': ['Live TV', 'Sports']
+};
 
 export function ContentProvider({ children }) {
   const { showToast } = useToast();
@@ -397,7 +401,8 @@ export function ContentProvider({ children }) {
     return items
       .filter((item) => {
         // Category filter
-        if (selectedCategory !== 'All' && item.category !== selectedCategory) {
+        const matchingCategories = CATEGORY_FILTER_GROUPS[selectedCategory] || [selectedCategory];
+        if (selectedCategory !== 'All' && !matchingCategories.includes(item.category)) {
           return false;
         }
         // Search query filter

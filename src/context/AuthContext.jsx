@@ -72,6 +72,7 @@ export function AuthProvider({ children }) {
     };
   });
   const [authLoaded, setAuthLoaded] = useState(false);
+  const [ageVerified, setAgeVerified] = useState(() => sessionStorage.getItem('ronkws_age_verified') === 'true');
   const [firebaseReady, setFirebaseReady] = useState(false);
   const refreshTimeout = useRef(null);
 
@@ -251,7 +252,7 @@ export function AuthProvider({ children }) {
 
   // Active view/route navigation state
   const [currentRoute, setCurrentRoute] = useState(() => {
-    return user ? 'home' : 'login';
+    return 'home';
   });
 
   // Save users array to localStorage whenever modified
@@ -276,6 +277,15 @@ export function AuthProvider({ children }) {
     } catch (error) {
       console.warn('Unable to play intro audio:', error);
     }
+  };
+
+  const confirmAge = () => {
+    sessionStorage.removeItem('ronkws_age_denied');
+    sessionStorage.setItem('ronkws_age_verified', 'true');
+    setAgeVerified(true);
+    setCurrentRoute('home');
+    playIntroSound();
+    setPlayIntroAnimation(true);
   };
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -435,7 +445,7 @@ export function AuthProvider({ children }) {
       setUser(null);
       setPlayIntroAnimation(false);
       setIntroSoundPlayedOnce(false);
-      setCurrentRoute('login');
+      setCurrentRoute('home');
       showToast('Logged out successfully', 'info');
     }
   };
@@ -543,7 +553,7 @@ export function AuthProvider({ children }) {
           const blocked = !Boolean(u.blocked);
           if (user?.id === userId && blocked) {
             setUser(null);
-            setCurrentRoute('login');
+            setCurrentRoute('home');
           }
           showToast(
             `${u.name} has been ${blocked ? 'blocked' : 'unblocked'}`,
@@ -562,10 +572,10 @@ export function AuthProvider({ children }) {
   };
 
   // Wrapper for setCurrentRoute to validate route and prevent blank screens
-  const validRoutes = ['home', 'trending', 'favorites', 'search', 'profile', 'admin', 'dmca', 'login'];
+  const validRoutes = ['home', 'trending', 'favorites', 'search', 'profile', 'admin', 'dmca'];
   const setCurrentRouteWithValidation = useCallback((route) => {
-    if (route === 'admin' && user?.role !== 'admin') {
-      console.warn('Admin route requires administrator access, defaulting to home');
+    if ((route === 'admin' && user?.role !== 'admin') || (route === 'profile' && !user)) {
+      console.warn(`Route ${route} requires an authenticated account, defaulting to home`);
       setCurrentRoute('home');
       return;
     }
@@ -575,7 +585,7 @@ export function AuthProvider({ children }) {
       console.warn(`Invalid route: ${route}, defaulting to home`);
       setCurrentRoute('home');
     }
-  }, []);
+  }, [user]);
 
   const completeIntroAnimation = () => {
     setPlayIntroAnimation(false);
@@ -590,6 +600,7 @@ export function AuthProvider({ children }) {
         users,
         preferences,
         authLoaded,
+        ageVerified,
         isAuthenticated: !!user,
         isAdmin: user?.role === 'admin',
         playIntroAnimation,
@@ -606,7 +617,8 @@ export function AuthProvider({ children }) {
         deleteUser,
         updatePreference,
         replacePreferences,
-        completeIntroAnimation
+        completeIntroAnimation,
+        confirmAge
       }}
     >
       {children}

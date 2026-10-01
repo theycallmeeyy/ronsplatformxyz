@@ -6,9 +6,9 @@ import { ContentProvider } from './context/ContentContext';
 import Navigation from './components/Navigation';
 import CinematicIntro from './components/CinematicIntro';
 import ContentModal from './components/ContentModal';
+import AgeGate from './components/AgeGate';
 
-import Login from './pages/Login';
-import Home from './pages/Home';
+import Home from './pages/DirectoryHome';
 import Trending from './pages/Trending';
 import Favorites from './pages/Favorites';
 import SearchPage from './pages/SearchPage';
@@ -17,7 +17,15 @@ import AdminDashboard from './pages/AdminDashboard';
 import Dmca from './pages/Dmca';
 
 function MainApp() {
-  const { authLoaded, isAuthenticated, isAdmin, playIntroAnimation, currentRoute, completeIntroAnimation } = useAuth();
+  const { authLoaded, isAuthenticated, isAdmin, ageVerified, confirmAge, playIntroAnimation, currentRoute, completeIntroAnimation } = useAuth();
+
+  if (!ageVerified) {
+    return <AgeGate onContinue={confirmAge} />;
+  }
+
+  if (playIntroAnimation) {
+    return <CinematicIntro onComplete={completeIntroAnimation} />;
+  }
 
   if (!authLoaded) {
     return (
@@ -30,22 +38,6 @@ function MainApp() {
     );
   }
 
-  // If user just logged in, display the 4-second Cinematic Logo Animation
-  if (playIntroAnimation) {
-    return <CinematicIntro onComplete={completeIntroAnimation} />;
-  }
-
-  // If not authenticated, render Login/Sign Up page (Navigation Home button is hidden)
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-[#14121d] text-white">
-        <Navigation />
-        <Login />
-      </div>
-    );
-  }
-
-  // Authenticated state rendering
   return (
     <div className="min-h-screen bg-[#14121d] text-white selection:bg-purple-600 selection:text-white">
       {/* Navigation Top Header & Mobile Nav Bar (Home button is now VISIBLE) */}
@@ -57,11 +49,11 @@ function MainApp() {
         {currentRoute === 'trending' && <Trending />}
         {currentRoute === 'favorites' && <Favorites />}
         {currentRoute === 'search' && <SearchPage />}
-        {currentRoute === 'profile' && <Profile />}
+        {currentRoute === 'profile' && isAuthenticated && <Profile />}
         {currentRoute === 'admin' && isAdmin && <AdminDashboard />}
         {currentRoute === 'dmca' && <Dmca />}
         {/* Fallback: if currentRoute is invalid/undefined, show Home */}
-        {(!['home', 'trending', 'favorites', 'search', 'profile', 'admin', 'dmca'].includes(currentRoute) || (currentRoute === 'admin' && !isAdmin)) && <Home />}
+        {(!['home', 'trending', 'favorites', 'search', 'profile', 'admin', 'dmca'].includes(currentRoute) || (currentRoute === 'admin' && !isAdmin) || (currentRoute === 'profile' && !isAuthenticated)) && <Home />}
       </main>
 
       {/* Content Stream Player Modal */}
