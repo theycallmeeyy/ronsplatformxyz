@@ -1,8 +1,6 @@
 const LOGO_MAP = {
   "TBCPL": "/_next/image?url=%2Flogo.png&w=96&q=75",
   "US flag": "https://flagcdn.com/w40/us.png",
-  "Join our Discord": "/socials/discord.png",
-  "Join our subreddit": "/socials/reddit.png",
   "1Shows": "/logo/movies_shows/1shows.png",
   "1Flex": "/logo/movies_shows/1flex.png",
   "1Tube": "/logo/movies_shows/1tube.png",

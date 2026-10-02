@@ -16,6 +16,7 @@ import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
 import Dmca from './pages/Dmca';
 import RequestSite from './pages/RequestSite';
+import Login from './pages/Login';
 
 function MainApp() {
   const { authLoaded, isAuthenticated, isAdmin, ageVerified, confirmAge, playIntroAnimation, currentRoute, completeIntroAnimation } = useAuth();
@@ -59,7 +60,7 @@ function MainApp() {
   return (
     <div className="min-h-screen bg-[#14121d] text-white selection:bg-purple-600 selection:text-white">
       {/* Navigation Top Header & Mobile Nav Bar (Home button is now VISIBLE) */}
-      <Navigation />
+      {currentRoute !== 'login' && <Navigation />}
 
       {/* Main Page Router */}
       <main className="min-h-[calc(100vh-80px)]">
@@ -67,16 +68,17 @@ function MainApp() {
         {currentRoute === 'trending' && <Trending />}
         {currentRoute === 'favorites' && <Favorites />}
         {currentRoute === 'search' && <SearchPage />}
+        {currentRoute === 'login' && !isAuthenticated && <Login />}
         {currentRoute === 'profile' && isAuthenticated && <Profile />}
         {currentRoute === 'admin' && isAdmin && <AdminDashboard />}
         {currentRoute === 'dmca' && <Dmca />}
         {currentRoute === 'request' && <RequestSite />}
         {/* Fallback: if currentRoute is invalid/undefined, show Home */}
-        {(!['home', 'trending', 'favorites', 'search', 'profile', 'admin', 'dmca', 'request'].includes(currentRoute) || (currentRoute === 'admin' && !isAdmin) || (currentRoute === 'profile' && !isAuthenticated)) && <Home />}
+        {(!['home', 'trending', 'favorites', 'search', 'profile', 'admin', 'dmca', 'request', 'login'].includes(currentRoute) || (currentRoute === 'admin' && !isAdmin) || (currentRoute === 'profile' && !isAuthenticated) || (currentRoute === 'login' && isAuthenticated)) && <Home />}
       </main>
 
       {/* Content Stream Player Modal */}
-      <ContentModal />
+      {currentRoute !== 'login' && <ContentModal />}
     </div>
   );
 }

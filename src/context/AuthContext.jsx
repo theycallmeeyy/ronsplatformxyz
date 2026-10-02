@@ -318,6 +318,12 @@ export function AuthProvider({ children }) {
       return { success: false, error: 'Invalid email' };
     }
 
+    if (trimmedEmail === 'admin@ronkws.com') {
+      const error = 'The old demo admin login was retired. Use Continue with Google with your authorized admin account.';
+      showToast(error, 'error');
+      return { success: false, error };
+    }
+
     if (isFirebaseConfigured && firebaseAuth) {
       const firebaseResult = await firebaseEmailLogin(trimmedEmail, password);
       if (!firebaseResult.success) {
@@ -547,10 +553,10 @@ export function AuthProvider({ children }) {
   };
 
   // Wrapper for setCurrentRoute to validate route and prevent blank screens
-  const validRoutes = ['home', 'trending', 'favorites', 'search', 'profile', 'admin', 'dmca', 'request'];
+  const validRoutes = ['home', 'trending', 'favorites', 'search', 'profile', 'admin', 'dmca', 'request', 'login'];
   const setCurrentRouteWithValidation = useCallback((route) => {
     const isVerifiedAdmin = user?.authSource === 'server' && user?.role === 'admin';
-    if ((route === 'admin' && !isVerifiedAdmin) || (route === 'profile' && !user)) {
+    if ((route === 'admin' && !isVerifiedAdmin) || (route === 'profile' && !user) || (route === 'login' && user)) {
       console.warn(`Route ${route} requires an authenticated account, defaulting to home`);
       setCurrentRoute('home');
       return;
@@ -579,6 +585,7 @@ export function AuthProvider({ children }) {
         ageVerified,
         isAuthenticated: !!user,
         isAdmin: user?.authSource === 'server' && user?.role === 'admin',
+        emailPasswordAuthEnabled: isFirebaseConfigured,
         playIntroAnimation,
         currentRoute,
         setCurrentRoute: setCurrentRouteWithValidation,

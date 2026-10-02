@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
   LogOut,
+  LogIn,
   Menu,
   Moon,
   Sun,
@@ -45,26 +46,16 @@ export default function Navigation() {
           </button>
 
           <div className="directory-header-actions">
-            <a
-              className="header-icon-button header-social-link"
-              href="https://discord.gg/bazxR8fA43"
-              target="_blank"
-              rel="noreferrer noopener"
-              aria-label="Open Ronkws community"
-              title="Community"
-            >
-              <span className="social-glyph">D</span>
-            </a>
-            <a
-              className="header-icon-button header-social-link"
-              href="https://www.reddit.com/r/tbcpl/"
-              target="_blank"
-              rel="noreferrer noopener"
-              aria-label="Open community on Reddit"
-              title="Reddit"
-            >
-              <span className="social-glyph">r/</span>
-            </a>
+            {!isAuthenticated && (
+              <button
+                type="button"
+                className="header-auth-button"
+                onClick={() => navigateTo('login')}
+              >
+                <LogIn size={15} />
+                <span>Sign up / Log in</span>
+              </button>
+            )}
             <button
               type="button"
               className="header-icon-button"

@@ -1,52 +1,50 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { fetchGoogleAuth } from '../utils/api';
-
-const GoogleIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M17.64 9.20454C17.64 8.56364 17.5791 7.93182 17.4609 7.31818H9V10.6818H13.8436C13.6618 11.8182 12.9818 12.7618 12.0182 13.3455V15.7455H14.9636C16.7064 14.2327 17.64 11.9391 17.64 9.20454Z" fill="#4285F4"/>
-    <path d="M9 18C11.43 18 13.4555 17.1473 14.9636 15.7455L12.0182 13.3455C11.2409 13.8636 10.24 14.1636 9 14.1636C6.64818 14.1636 4.67818 12.6545 4.11818 10.4818H1.10909V12.9455C2.61091 15.9973 5.57455 18 9 18Z" fill="#34A853"/>
-    <path d="M4.11818 10.4818C3.95455 9.86364 3.86364 9.20454 3.86364 8.51818C3.86364 7.83182 3.95455 7.17273 4.11818 6.55455V4.09091H1.10909C0.401818 5.45909 0 6.96727 0 8.51818C0 10.0691 0.401818 11.5773 1.10909 12.9455L4.11818 10.4818Z" fill="#FBBC05"/>
-    <path d="M9 3.81818C10.3027 3.81818 11.4573 4.34091 12.3045 5.22273L15.0064 2.52091C13.4564 1.05455 11.4309 0 9 0C5.57455 0 2.61091 2.00273 1.10909 4.09091L4.11818 6.55455C4.67818 4.38182 6.64818 2.87273 9 2.87273V3.81818Z" fill="#EA4335"/>
-  </svg>
-);
+import { ArrowLeft, ExternalLink } from 'lucide-react';
 
 export default function Login() {
-  const { login, signup, loginWithGoogleUser } = useAuth();
+  const { login, signup, loginWithGoogleUser, setCurrentRoute, emailPasswordAuthEnabled } = useAuth();
   const [mode, setMode] = useState('login'); // 'login' or 'signup'
 
   // Form inputs
   const [name, setName] = useState('');
-  const [email, setEmail] = useState(() => localStorage.getItem('ronkws_remembered_user') || '');
+  const [email, setEmail] = useState(() => {
+    const rememberedEmail = localStorage.getItem('ronkws_remembered_user') || '';
+    if (rememberedEmail.toLowerCase() === 'admin@ronkws.com') {
+      localStorage.removeItem('ronkws_remembered_user');
+      return '';
+    }
+    return rememberedEmail;
+  });
   const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(() => Boolean(localStorage.getItem('ronkws_remembered_user')));
+  const [rememberMe, setRememberMe] = useState(() => Boolean(
+    localStorage.getItem('ronkws_remembered_user') &&
+    localStorage.getItem('ronkws_remembered_user').toLowerCase() !== 'admin@ronkws.com'
+  ));
   const [showPassword, setShowPassword] = useState(false);
-  const [ageVerified, setAgeVerified] = useState(() => localStorage.getItem('ronkws_age_verified') === 'true');
-  const [showAgeGateModal, setShowAgeGateModal] = useState(() => localStorage.getItem('ronkws_age_verified') === 'true' ? false : true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [showBrowserHelp, setShowBrowserHelp] = useState(false);
 
   // Field errors
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [nameError, setNameError] = useState('');
-  const [ageError, setAgeError] = useState('');
   const [googleError, setGoogleError] = useState('');
   const [authError, setAuthError] = useState('');
   const [blockedBanner, setBlockedBanner] = useState(false);
   const [googleLoaded, setGoogleLoaded] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
   const [googleClientId, setGoogleClientId] = useState(import.meta.env.VITE_GOOGLE_CLIENT_ID || '');
-  const [useRedirectFlow, setUseRedirectFlow] = useState(false);
+  const googleButtonRef = useRef(null);
 
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
   const isGoogleConfigured = Boolean(googleClientId);
   const shouldFetchGoogleConfig = !import.meta.env.VITE_GOOGLE_CLIENT_ID;
-
-  useEffect(() => {
-    const isMobile = typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    if (isMobile) {
-      setUseRedirectFlow(true);
-    }
-  }, []);
+  const isMessengerBrowser = typeof navigator !== 'undefined' &&
+    /FBAN|FBAV|Messenger|FB_IAB|Instagram/i.test(navigator.userAgent);
+  const isAndroid = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent);
+  const isIOS = typeof navigator !== 'undefined' && /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
   useEffect(() => {
     if (!shouldFetchGoogleConfig) return;
@@ -70,16 +68,6 @@ export default function Login() {
   }, [apiBaseUrl, shouldFetchGoogleConfig]);
 
   useEffect(() => {
-    localStorage.setItem('ronkws_age_verified', ageVerified ? 'true' : 'false');
-  }, [ageVerified]);
-
-  useEffect(() => {
-    if (!ageVerified) {
-      setShowAgeGateModal(true);
-    }
-  }, [ageVerified]);
-
-  useEffect(() => {
     const scriptId = 'google-identity-script';
     if (document.getElementById(scriptId)) {
       setGoogleLoaded(true);
@@ -96,7 +84,9 @@ export default function Login() {
     document.body.appendChild(script);
   }, []);
 
-  const handleGoogleCredential = async (response) => {
+  const handleGoogleCredential = useCallback(async (response) => {
+    setGoogleError('');
+    setGoogleLoading(true);
     if (!response?.credential) {
       setGoogleError('Google login failed to return a valid credential.');
       setGoogleLoading(false);
@@ -121,48 +111,47 @@ export default function Login() {
       setGoogleLoading(false);
       console.error(error);
     }
-  };
+  }, [loginWithGoogleUser]);
 
-  const handleGoogleSignIn = (forceRedirect = false) => {
-    setAgeError('');
-    setGoogleError('');
-    if (!ageVerified) {
-      setAgeError('You must confirm that you are 18 years or older to continue.');
-      setShowAgeGateModal(true);
-      return;
-    }
-    if (!googleLoaded || !window.google?.accounts?.id) {
-      setGoogleError('Google sign-in is not ready yet. Please try again in a moment.');
-      return;
-    }
+  useEffect(() => {
+    if (!googleLoaded || !googleClientId || !window.google?.accounts?.id || !googleButtonRef.current) return;
 
-    if (!googleClientId) {
-      setGoogleError('Google Client ID is not configured. Please add VITE_GOOGLE_CLIENT_ID to .env and restart the dev server.');
-      return;
-    }
-
-    const useRedirect = forceRedirect || useRedirectFlow;
-    setGoogleLoading(true);
-
+    const button = googleButtonRef.current;
+    button.replaceChildren();
     window.google.accounts.id.initialize({
       client_id: googleClientId,
       callback: handleGoogleCredential,
-      ux_mode: useRedirect ? 'redirect' : 'popup'
+      ux_mode: 'popup'
     });
-
-    window.google.accounts.id.prompt((notification) => {
-      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-        if (!useRedirect) {
-          setGoogleError('Popup blocked on mobile. Switching to redirect sign-in...');
-          setGoogleLoading(false);
-          handleGoogleSignIn(true);
-          return;
-        }
-
-        setGoogleError('Google authentication prompt was canceled or blocked.');
-        setGoogleLoading(false);
-      }
+    window.google.accounts.id.renderButton(button, {
+      type: 'standard',
+      theme: 'filled_black',
+      size: 'large',
+      text: mode === 'signup' ? 'signup_with' : 'signin_with',
+      shape: 'pill',
+      logo_alignment: 'left',
+      width: Math.floor(button.getBoundingClientRect().width)
     });
+  }, [googleLoaded, googleClientId, handleGoogleCredential, mode]);
+
+  const openInExternalBrowser = () => {
+    setShowBrowserHelp(true);
+    const externalUrl = new URL(window.location.href);
+    externalUrl.searchParams.set('externalAuth', '1');
+
+    if (isAndroid) {
+      const intentUrl = `intent://${externalUrl.host}${externalUrl.pathname}${externalUrl.search}#Intent;scheme=${externalUrl.protocol.slice(0, -1)};package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(externalUrl.href)};end`;
+      window.location.href = intentUrl;
+      return;
+    }
+
+    if (isIOS) {
+      const chromeUrl = `googlechrome://navigate?url=${encodeURIComponent(externalUrl.href)}`;
+      window.location.href = chromeUrl;
+      return;
+    }
+
+    window.open(externalUrl.href, '_blank', 'noopener,noreferrer');
   };
 
   // Validate Email regex
@@ -188,6 +177,8 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setAuthError('');
+    setGoogleError('');
 
     const eErr = validateEmail(email);
     const pErr = validatePassword(password);
@@ -197,22 +188,24 @@ export default function Login() {
     setPasswordError(pErr);
     setNameError(nErr);
 
-    const ageErr = ageVerified ? '' : 'You must confirm that you are 18 years or older to continue.';
-    setAgeError(ageErr);
-
-    if (eErr || pErr || (mode === 'signup' && nErr) || ageErr) {
+    if (eErr || pErr || (mode === 'signup' && nErr)) {
       return;
     }
 
-    let result;
-    if (mode === 'login') {
-      result = await login(email, password, rememberMe);
-    } else {
-      result = await signup(name, email, password);
-    }
+    setIsSubmitting(true);
+    try {
+      const result = mode === 'login'
+        ? await login(email, password, rememberMe)
+        : await signup(name, email, password);
 
-    if (!result?.success) {
-      setGoogleError(result.error || 'Unable to complete authentication.');
+      if (!result?.success) {
+        setAuthError(result.error || 'Unable to complete authentication.');
+      }
+    } catch (error) {
+      console.error('Authentication failed:', error);
+      setAuthError('Unable to complete authentication. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -224,76 +217,30 @@ export default function Login() {
 
       {/* Main Login Box */}
       <main className="w-full max-w-md z-10 relative">
-        {showAgeGateModal && (
-          <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/80 px-4 py-6">
-            <div className="w-full max-w-lg rounded-[32px] border border-white/15 bg-[#16131f]/95 p-8 text-left shadow-[0_20px_60px_rgba(0,0,0,0.55)] backdrop-blur-xl">
-              <div className="mb-6 text-center">
-                <span className="inline-flex items-center justify-center rounded-full bg-purple-600/15 text-purple-200 w-12 h-12 mx-auto mb-4">
-                  <span className="material-symbols-outlined text-3xl">verified_user</span>
-                </span>
-                <h2 className="text-2xl font-extrabold text-white mb-2">Age Verification Required</h2>
-                <p className="text-sm text-zinc-400 max-w-xl mx-auto">
-                  You must confirm that you are 18 years or older before continuing to Ronkws Streaming Hub.
-                  This check protects our community and ensures compliance with platform policies.
-                </p>
-              </div>
-              <div className="space-y-4">
-                <label className="flex items-start gap-3 rounded-[24px] border border-white/10 bg-white/5 p-4">
-                  <input
-                    type="checkbox"
-                    checked={ageVerified}
-                    onChange={(e) => {
-                      setAgeVerified(e.target.checked);
-                      if (e.target.checked) {
-                        setAgeError('');
-                        setShowAgeGateModal(false);
-                      }
-                    }}
-                    className="mt-1 h-5 w-5 rounded border-white/20 bg-[#181622] text-purple-500 focus:ring-purple-500"
-                  />
-                  <span className="text-sm text-zinc-200 leading-6">
-                    I confirm that I am <strong>18 years or older</strong> and authorized to use this service.
-                  </span>
-                </label>
-                {ageError && <p className="text-xs text-rose-400">{ageError}</p>}
-              </div>
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAgeVerified(true);
-                    setShowAgeGateModal(false);
-                    setAgeError('');
-                  }}
-                  className="w-full sm:w-auto bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-[24px] px-6 py-3 transition-all"
-                >
-                  I am 18 or older
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAgeVerified(false);
-                    setShowAgeGateModal(true);
-                    setAgeError('You must confirm that you are 18 years or older to continue.');
-                  }}
-                  className="w-full sm:w-auto border border-white/10 text-white/80 hover:text-white hover:border-purple-500 rounded-[24px] px-6 py-3 transition-all"
-                >
-                  I am under 18
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
         <div className="bg-[#181622]/85 backdrop-blur-xl border border-white/10 rounded-[28px] p-8 shadow-[0px_8px_32px_rgba(124,58,237,0.2)] flex flex-col items-center">
-          
+          <button
+            type="button"
+            onClick={() => setCurrentRoute('home')}
+            className="mb-5 inline-flex self-start items-center gap-2 rounded-full border border-white/10 px-3 py-2 text-xs font-semibold text-zinc-300 transition hover:border-purple-400/40 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-purple-300"
+          >
+            <ArrowLeft size={14} /> Back to browsing
+          </button>
+
           {/* Logo Badge */}
           <div className="mb-6 flex flex-col items-center">
-            <div className="h-20 w-20 bg-gradient-to-tr from-purple-700 to-indigo-600 rounded-2xl flex items-center justify-center shadow-[0_0_25px_rgba(124,58,237,0.5)] mb-3">
-              <span className="font-black text-white text-4xl tracking-wider">R</span>
+            <div className="mb-3 flex h-20 w-20 items-center justify-center rounded-2xl border border-white/10 bg-[#08090b] shadow-[0_0_24px_rgba(0,0,0,0.5)]">
+              <img src="/logo/ronkws-glass-mark.svg" alt="" className="h-14 w-12 object-contain" />
             </div>
             <h1 className="text-2xl font-extrabold text-white tracking-tight">
               Ronkws Streaming Hub
             </h1>
+            <p className="mt-1 text-xs text-zinc-400">
+              {!emailPasswordAuthEnabled
+                ? 'Sign in or create your account securely with Google.'
+                : mode === 'login'
+                ? 'Welcome back. Sign in to your account.'
+                : 'Create an account to get started.'}
+            </p>
           </div>
 
           {blockedBanner && (
@@ -318,6 +265,17 @@ export default function Login() {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="w-full space-y-4">
+            {!emailPasswordAuthEnabled && (
+              <div className="w-full rounded-2xl border border-purple-400/20 bg-purple-500/[0.08] p-4 text-left">
+                <p className="text-sm font-semibold text-purple-100">Use Google to continue</p>
+                <p className="mt-1 text-xs leading-5 text-zinc-300">
+                  Email and password sign-in isn’t configured for this app. Your first Google sign-in creates your account. Admin access is limited to the authorized Google account.
+                </p>
+              </div>
+            )}
+
+            {emailPasswordAuthEnabled && (
+              <>
             {/* Full Name Field (Sign Up Only) */}
             {mode === 'signup' && (
               <div>
@@ -325,6 +283,8 @@ export default function Login() {
                   <span className="material-symbols-outlined text-zinc-400 mr-3 text-[20px]">person</span>
                   <input
                     type="text"
+                    autoComplete="name"
+                    required={mode === 'signup'}
                     value={name}
                     onChange={(e) => {
                       setName(e.target.value);
@@ -344,6 +304,8 @@ export default function Login() {
                 <span className="material-symbols-outlined text-zinc-400 mr-3 text-[20px]">mail</span>
                 <input
                   type="email"
+                  autoComplete="email"
+                  required
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
@@ -362,6 +324,9 @@ export default function Login() {
                 <span className="material-symbols-outlined text-zinc-400 mr-3 text-[20px]">lock</span>
                 <input
                   type={showPassword ? 'text' : 'password'}
+                  autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                  minLength={6}
+                  required
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
@@ -390,87 +355,80 @@ export default function Login() {
                 onChange={(e) => setRememberMe(e.target.checked)}
                 className="h-4 w-4 rounded border-white/20 bg-[#181622] text-purple-500 focus:ring-purple-500"
               />
-              <span>Remember me</span>
+              <span>Remember email</span>
             </label>
+              </>
+            )}
 
-            <label className="flex items-start gap-3 text-sm text-zinc-300">
-              <input
-                type="checkbox"
-                checked={ageVerified}
-                onChange={(e) => {
-                  setAgeVerified(e.target.checked);
-                  if (e.target.checked) setAgeError('');
-                }}
-                className="mt-1 h-4 w-4 rounded border-white/20 bg-[#181622] text-purple-500 focus:ring-purple-500"
-              />
-              <span>
-                I confirm that I am <strong>18 years or older</strong> and agree to the terms of use.
-              </span>
-            </label>
-            {ageError && <p className="text-xs text-rose-400 mt-1 pl-4">{ageError}</p>}
-
-            <div className="flex items-center gap-2 py-2">
-              <div className="h-px flex-1 bg-white/10" />
-              <span className="text-[11px] text-zinc-400 uppercase tracking-[0.2em]">or</span>
-              <div className="h-px flex-1 bg-white/10" />
-            </div>
-
-            <button
-              type="button"
-              onClick={handleGoogleSignIn}
-              disabled={showAgeGateModal || googleLoading || !isGoogleConfigured}
-              className={`w-full bg-[#2f1b66] ${isGoogleConfigured && !showAgeGateModal ? 'hover:bg-[#4b32a4] shadow-[0_4px_20px_rgba(79,63,218,0.35)] hover:shadow-[0_6px_28px_rgba(79,63,218,0.45)]' : 'opacity-60 cursor-not-allowed'} text-white font-bold text-sm rounded-[24px] py-3.5 transition-all duration-300 active:scale-[0.98] flex items-center justify-center gap-3`}
-            >
-              <span className="w-6 h-6 rounded-full bg-white flex items-center justify-center">
-                <GoogleIcon />
-              </span>
-              {googleLoading
-                ? 'Signing in...'
-                : isGoogleConfigured
-                ? 'Continue with Google'
-                : 'Google sign-in unavailable'}
-            </button>
-            {googleError && <p className="text-xs text-rose-400 mt-2">{googleError}</p>}
-            {!isGoogleConfigured && (
-              <div className="flex items-start gap-2 rounded-2xl border border-yellow-500/30 bg-yellow-500/10 p-3 mt-3 text-[13px] text-yellow-200">
-                <span className="material-symbols-outlined text-yellow-300 mt-0.5">warning</span>
-                <div>
-                  <p className="font-semibold text-yellow-100">Google sign-in is currently disabled.</p>
-                  <p>
-                    Add both <code className="text-[11px] text-yellow-200">VITE_GOOGLE_CLIENT_ID</code> and <code className="text-[11px] text-yellow-200">GOOGLE_CLIENT_ID</code> to your <code className="text-[11px] text-zinc-200">.env</code> file and restart the dev server.
-                  </p>
-                </div>
+            {emailPasswordAuthEnabled && (
+              <div className="flex items-center gap-2 py-2">
+                <div className="h-px flex-1 bg-white/10" />
+                <span className="text-[11px] text-zinc-400 uppercase tracking-[0.2em]">or</span>
+                <div className="h-px flex-1 bg-white/10" />
               </div>
             )}
 
+            {isMessengerBrowser ? (
+              <button
+                type="button"
+                onClick={openInExternalBrowser}
+                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-[24px] bg-white px-5 text-sm font-bold text-zinc-900 shadow-[0_4px_20px_rgba(0,0,0,0.25)] transition hover:bg-zinc-100 active:scale-[0.98]"
+              >
+                <ExternalLink size={17} />
+                Open sign-in in your browser
+              </button>
+            ) : isGoogleConfigured ? (
+              <div className="relative min-h-11 w-full" ref={googleButtonRef} />
+            ) : (
+              <div className="w-full rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-100">
+                Google sign-in is unavailable because the Google Client ID isn’t configured.
+              </div>
+            )}
+            {isMessengerBrowser && (
+              <p className="text-center text-xs leading-5 text-zinc-400">
+                Messenger blocks Google sign-in inside its built-in browser. This opens the same page in your browser—no copying or pasting.
+              </p>
+            )}
+            {showBrowserHelp && (isIOS || isAndroid) && (
+              <p role="status" className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-xs leading-5 text-zinc-300">
+                If Chrome didn’t open, tap the <strong>•••</strong> menu in Messenger and choose <strong>Open in external browser</strong>. Then tap Continue with Google.
+              </p>
+            )}
+            {googleLoading && <p role="status" className="text-center text-xs text-zinc-400">Signing you in…</p>}
+            {googleError && <p role="alert" className="text-xs text-rose-400 mt-2">{googleError}</p>}
             {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={showAgeGateModal}
-              className={`w-full ${showAgeGateModal ? 'bg-white/10 text-zinc-400 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-500 text-white'} font-bold text-sm rounded-[24px] py-3.5 transition-all duration-300 shadow-[0_4px_20px_rgba(124,58,237,0.4)] hover:shadow-[0_6px_28px_rgba(124,58,237,0.6)] active:scale-[0.98] mt-2`}
-            >
-              {mode === 'login' ? 'Log in' : 'Create Account'}
-            </button>
+            {emailPasswordAuthEnabled && (
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="mt-2 w-full rounded-[24px] bg-purple-600 py-3.5 text-sm font-bold text-white shadow-[0_4px_20px_rgba(124,58,237,0.4)] transition-all duration-300 hover:bg-purple-500 hover:shadow-[0_6px_28px_rgba(124,58,237,0.6)] active:scale-[0.98] disabled:cursor-wait disabled:opacity-60"
+              >
+                {isSubmitting ? 'Please wait…' : mode === 'login' ? 'Log in' : 'Create Account'}
+              </button>
+            )}
           </form>
 
           {/* Mode Switcher Link */}
-          <div className="mt-6 w-full text-center">
+          {emailPasswordAuthEnabled && <div className="mt-6 w-full text-center">
             <p className="text-xs text-zinc-400">
               {mode === 'login' ? "Don't have an account?" : 'Already have an account?'}
               <button
                 type="button"
                 onClick={() => {
                   setMode(mode === 'login' ? 'signup' : 'login');
+                  setPassword('');
                   setEmailError('');
                   setPasswordError('');
                   setNameError('');
+                  setAuthError('');
+                  setGoogleError('');
                 }}
                 className="text-purple-300 font-semibold hover:text-purple-200 transition-colors ml-1"
               >
                 {mode === 'login' ? 'Create Account' : 'Sign In'}
               </button>
             </p>
-          </div>
+          </div>}
 
         </div>
       </main>
