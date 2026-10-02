@@ -1,6 +1,15 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import {
+  createSupabaseSiteRequest,
+  createSupabaseCatalogItem,
+  deleteSupabaseSiteRequest,
+  getSupabaseSiteRequests,
+  getSupabaseCatalogItems,
+  hasSupabaseStorageConfig,
+  updateSupabaseSiteRequest
+} from '../shared/siteRequestStore.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DB_FILE = path.join(__dirname, 'database.json');
@@ -24,6 +33,68 @@ async function saveDb(db) {
 export async function getUsers() {
   const db = await loadDb();
   return Array.isArray(db.users) ? db.users : [];
+}
+
+export async function getSiteRequests() {
+  if (hasSupabaseStorageConfig()) return getSupabaseSiteRequests();
+  const db = await loadDb();
+  return Array.isArray(db.siteRequests) ? db.siteRequests : [];
+}
+
+export async function createSiteRequest(request) {
+  if (hasSupabaseStorageConfig()) return createSupabaseSiteRequest(request);
+  const db = await loadDb();
+  db.siteRequests = Array.isArray(db.siteRequests) ? db.siteRequests : [];
+  const entry = {
+    ...request,
+    id: `request-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    status: 'pending',
+    submittedAt: new Date().toISOString()
+  };
+  db.siteRequests.unshift(entry);
+  await saveDb(db);
+  return entry;
+}
+
+export async function updateSiteRequest(id, updates) {
+  if (hasSupabaseStorageConfig()) return updateSupabaseSiteRequest(id, updates);
+  const db = await loadDb();
+  db.siteRequests = Array.isArray(db.siteRequests) ? db.siteRequests : [];
+  const index = db.siteRequests.findIndex((request) => request.id === id);
+  if (index === -1) return null;
+  db.siteRequests[index] = { ...db.siteRequests[index], ...updates };
+  await saveDb(db);
+  return db.siteRequests[index];
+}
+
+export async function deleteSiteRequest(id) {
+  if (hasSupabaseStorageConfig()) return deleteSupabaseSiteRequest(id);
+  const db = await loadDb();
+  db.siteRequests = Array.isArray(db.siteRequests) ? db.siteRequests : [];
+  const initialLength = db.siteRequests.length;
+  db.siteRequests = db.siteRequests.filter((request) => request.id !== id);
+  if (db.siteRequests.length === initialLength) return false;
+  await saveDb(db);
+  return true;
+}
+
+export async function getSharedCatalogItems() {
+  if (hasSupabaseStorageConfig()) return getSupabaseCatalogItems();
+  const db = await loadDb();
+  return Array.isArray(db.catalogItems) ? db.catalogItems : [];
+}
+
+export async function createSharedCatalogItem(item) {
+  if (hasSupabaseStorageConfig()) return createSupabaseCatalogItem(item);
+  const db = await loadDb();
+  db.catalogItems = Array.isArray(db.catalogItems) ? db.catalogItems : [];
+  if (item.sourceRequestId) {
+    const existing = db.catalogItems.find((catalogItem) => catalogItem.sourceRequestId === item.sourceRequestId);
+    if (existing) return existing;
+  }
+  db.catalogItems.unshift(item);
+  await saveDb(db);
+  return item;
 }
 
 export async function getMeta() {
@@ -67,7 +138,7 @@ export async function updateUser(userId, updates) {
   return db.users[index];
 }
 
-export async function upsertGoogleUser({ googleUid, email, name, profilePhoto }) {
+export async function upsertGoogleUser({ googleUid, email, name, profilePhoto, role }) {
   const existingGoogleUser = await findUserByGoogleUid(googleUid);
   const existingEmailUser = await findUserByEmail(email);
   const now = new Date().toISOString();
@@ -77,6 +148,8 @@ export async function upsertGoogleUser({ googleUid, email, name, profilePhoto })
       email,
       name,
       profile_photo: profilePhoto,
+      role,
+      admin_authorized: role === 'admin',
       updated_at: now,
       last_login: now
     });
@@ -89,6 +162,8 @@ export async function upsertGoogleUser({ googleUid, email, name, profilePhoto })
       provider: 'google',
       name,
       profile_photo: profilePhoto,
+      role,
+      admin_authorized: role === 'admin',
       updated_at: now,
       last_login: now
     });
@@ -102,6 +177,8 @@ export async function upsertGoogleUser({ googleUid, email, name, profilePhoto })
     email,
     profile_photo: profilePhoto,
     provider: 'google',
+    role,
+    admin_authorized: role === 'admin',
     created_at: now,
     updated_at: now,
     last_login: now

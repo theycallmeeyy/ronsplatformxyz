@@ -1,6 +1,6 @@
 import { OAuth2Client } from 'google-auth-library';
 import { upsertGoogleUser } from '../_lib/db.js';
-import { createSessionToken, buildSessionCookie } from '../_lib/authHelpers.js';
+import { createSessionToken, buildSessionCookie, sanitizeUserForClient } from '../_lib/authHelpers.js';
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const googleClient = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null;
@@ -49,18 +49,27 @@ export default async function handler(req, res) {
     const email = payload.email || '';
     const name = payload.name || 'Google User';
     const profilePhoto = payload.picture || '';
+    const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+    const emailVerified = payload.email_verified === true || payload.email_verified === 'true';
+    const role = adminEmail && emailVerified && email.toLowerCase() === adminEmail ? 'admin' : 'user';
 
     const user = await upsertGoogleUser({
       googleUid,
       email,
       name,
-      profilePhoto
+      profilePhoto,
+      role
     });
 
-    const token = createSessionToken(user.id);
+    const token = createSessionToken(user.id, {
+      email,
+      name,
+      role,
+      adminAuthorized: role === 'admin'
+    });
     res.setHeader('Set-Cookie', buildSessionCookie(token));
     res.setHeader('Content-Type', 'application/json');
-    return res.end(JSON.stringify({ success: true, user, expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() }));
+    return res.end(JSON.stringify({ success: true, user: sanitizeUserForClient(user), expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() }));
   } catch (error) {
     console.error('Google auth error:', error);
     res.statusCode = 401;

@@ -219,16 +219,5 @@ export const INITIAL_USERS = [
     avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80",
     memberSince: "2023",
     bio: "Passionate about sci-fi thrillers and 4K streaming."
-  },
-  {
-    id: "usr-002",
-    name: "Ron (Admin)",
-    email: "admin@ronkws.com",
-    password: "canoaaron24@gmail.com",
-    role: "admin",
-    blocked: false,
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
-    memberSince: "2022",
-    bio: "Head Administrator at Ronkws Streaming Hub."
   }
 ];

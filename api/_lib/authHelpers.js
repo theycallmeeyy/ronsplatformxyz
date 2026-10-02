@@ -4,8 +4,33 @@ const JWT_SECRET = process.env.JWT_SECRET || 'change-this-secret';
 const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
 const COOKIE_NAME = 'ronkws_session';
 
-export function createSessionToken(userId) {
-  return jwt.sign({ sub: userId }, JWT_SECRET, {
+export function sanitizeUserForClient(user) {
+  if (!user) return null;
+  const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+  const isAdmin = Boolean(user.admin_authorized === true && adminEmail && user.email?.toLowerCase() === adminEmail);
+  const { id, google_uid, name, email, profile_photo, provider, created_at, updated_at, last_login } = user;
+  return {
+    id,
+    google_uid,
+    name,
+    email,
+    profile_photo,
+    provider,
+    role: isAdmin ? 'admin' : 'user',
+    created_at,
+    updated_at,
+    last_login
+  };
+}
+
+export function createSessionToken(userId, identity = {}) {
+  return jwt.sign({
+    sub: userId,
+    email: identity.email,
+    name: identity.name,
+    role: identity.role || 'user',
+    adminAuthorized: identity.adminAuthorized === true
+  }, JWT_SECRET, {
     expiresIn: '7d'
   });
 }

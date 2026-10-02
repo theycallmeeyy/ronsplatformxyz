@@ -4,14 +4,31 @@ import { useContent } from '../context/ContentContext';
 
 export default function AdminDashboard() {
   const { users, toggleUserRole, toggleUserBlock, deleteUser } = useAuth();
-  const { items, addContent, updateContent, deleteContent, toggleTrending, analyticsItems, trafficByDay, getProviderStatus, getProviderReliability } = useContent();
+  const {
+    items,
+    siteRequests,
+    addContent,
+    updateContent,
+    deleteContent,
+    toggleTrending,
+    analyticsItems,
+    trafficByDay,
+    getProviderStatus,
+    getProviderReliability,
+    refreshSiteRequests,
+    markSiteRequestAdded,
+    deleteSiteRequest
+  } = useContent();
 
-  const [activeTab, setActiveTab] = useState('content'); // 'content', 'trending', or 'users'
+  const [activeTab, setActiveTab] = useState('content');
   const trendingItems = items.filter((item) => item.isTrending);
 
   // Add/Edit Content Modal State
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [requestBeingAdded, setRequestBeingAdded] = useState(null);
+  const [savingContent, setSavingContent] = useState(false);
+  const [contentSaveError, setContentSaveError] = useState('');
 
   // Form Fields
   const [title, setTitle] = useState('');
@@ -26,15 +43,23 @@ export default function AdminDashboard() {
   const [isTrending, setIsTrending] = useState(false);
   const [isRecommended, setIsRecommended] = useState(false);
 
-  const openAddModal = () => {
+  const openAddModal = (request = null) => {
+    setContentSaveError('');
     setEditingItem(null);
-    setTitle('');
-    setCategory('Movies');
+    setRequestBeingAdded(request);
+    setTitle(request?.siteName || '');
+    const requestedSection = request?.regionsSections?.[0]?.section;
+    const sectionCategory = {
+      'Movies & Shows': 'Movies',
+      'Live TV & Sports': 'Live TV',
+      Paid: 'Apps'
+    }[requestedSection] || requestedSection;
+    setCategory(['Movies', 'TV Shows', 'Anime', 'Manga', 'Live TV', 'Sports', 'Apps'].includes(sectionCategory) ? sectionCategory : 'Movies');
     setType('movie');
-    setUrl('');
+    setUrl(request?.siteUrl || '');
     setEmbedUrl('');
     setBannerUrl('');
-    setDescription('');
+    setDescription(request?.whyAdd || '');
     setRating('4.8');
     setYear('2024');
     setIsTrending(false);
@@ -43,7 +68,9 @@ export default function AdminDashboard() {
   };
 
   const openEditModal = (item) => {
+    setContentSaveError('');
     setEditingItem(item);
+    setRequestBeingAdded(null);
     setTitle(item.title || '');
     setCategory(item.category || 'Movies');
     setType(item.type || 'movie');
@@ -58,8 +85,9 @@ export default function AdminDashboard() {
     setShowModal(true);
   };
 
-  const handleSaveContent = (e) => {
+  const handleSaveContent = async (e) => {
     e.preventDefault();
+    setSavingContent(true);
     const contentData = {
       title,
       category,
@@ -71,15 +99,25 @@ export default function AdminDashboard() {
       rating,
       year,
       isTrending,
-      isRecommended
+      isRecommended,
+      ...(requestBeingAdded ? { sourceRequestId: requestBeingAdded.id } : {})
     };
 
-    if (editingItem) {
-      updateContent(editingItem.id, contentData);
-    } else {
-      addContent(contentData);
+    try {
+      if (editingItem) {
+        updateContent(editingItem.id, contentData);
+      } else {
+        await addContent(contentData);
+      }
+      if (requestBeingAdded) await markSiteRequestAdded(requestBeingAdded.id);
+      setShowModal(false);
+      setRequestBeingAdded(null);
+    } catch (error) {
+      console.error('Unable to save requested site:', error);
+      setContentSaveError(error.message || 'Unable to save this request. Please try again.');
+    } finally {
+      setSavingContent(false);
     }
-    setShowModal(false);
   };
 
   const exportAnalyticsCsv = () => {
@@ -195,7 +233,7 @@ export default function AdminDashboard() {
       </section>
 
       {/* Tab Switcher */}
-      <div className="flex gap-4 border-b border-white/10 pb-2">
+      <div className="flex flex-wrap gap-4 border-b border-white/10 pb-2">
         <button
           onClick={() => setActiveTab('content')}
           className={`font-bold text-sm pb-2 border-b-2 transition-all flex items-center gap-2 ${
@@ -229,7 +267,100 @@ export default function AdminDashboard() {
           <span className="material-symbols-outlined text-[18px]">group</span>
           Users Management ({users.length})
         </button>
+        <button
+          onClick={() => setActiveTab('requests')}
+          className={`font-bold text-sm pb-2 border-b-2 transition-all flex items-center gap-2 ${
+            activeTab === 'requests'
+              ? 'text-purple-300 border-purple-500'
+              : 'text-zinc-400 border-transparent hover:text-white'
+          }`}
+        >
+          <span className="material-symbols-outlined text-[18px]">inbox</span>
+          Site Requests ({siteRequests.filter((request) => request.status === 'pending').length})
+        </button>
       </div>
+
+      {activeTab === 'requests' && (
+        <section className="space-y-4">
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-sm text-zinc-400">Review community suggestions, then add selected sites to the catalog yourself.</p>
+            <button
+              type="button"
+              onClick={() => refreshSiteRequests().catch((error) => console.error('Unable to refresh site requests:', error))}
+              className="inline-flex min-h-9 shrink-0 items-center gap-2 rounded-lg border border-white/10 px-3 text-xs font-semibold text-zinc-300 transition hover:border-purple-400/40 hover:text-white"
+            >
+              <span className="material-symbols-outlined text-[16px]">refresh</span>
+              Refresh
+            </button>
+          </div>
+          {siteRequests.length === 0 ? (
+            <div className="glass-card rounded-3xl border border-white/10 p-10 text-center">
+              <span className="material-symbols-outlined text-4xl text-purple-300">inbox</span>
+              <h2 className="mt-3 text-lg font-bold text-white">No site requests yet</h2>
+              <p className="mt-1 text-sm text-zinc-400">New community submissions will appear here for review.</p>
+            </div>
+          ) : siteRequests.map((request) => (
+            <article key={request.id} className="glass-card rounded-2xl border border-white/10 p-5 sm:p-6">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0 space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="text-lg font-bold text-white">{request.siteName}</h2>
+                    <span className={`rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${
+                      request.status === 'added'
+                        ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+                        : 'border-amber-500/30 bg-amber-500/10 text-amber-200'
+                    }`}>
+                      {request.status === 'added' ? 'Added to catalog' : 'Pending review'}
+                    </span>
+                  </div>
+                  <a
+                    href={request.siteUrl}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="block break-all text-sm text-cyan-300 underline decoration-cyan-300/30 underline-offset-4 hover:text-cyan-200"
+                  >
+                    {request.siteUrl}
+                  </a>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {(request.regionsSections || []).map((target, index) => (
+                      <span key={`${target.region}-${target.section}-${index}`} className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-zinc-300">
+                        {target.section} · {target.region}
+                      </span>
+                    ))}
+                  </div>
+                  {request.whyAdd && <p className="max-w-3xl whitespace-pre-wrap text-sm leading-6 text-zinc-300">{request.whyAdd}</p>}
+                  <p className="text-[11px] text-zinc-500">
+                    Requested by {request.createdBy || 'anonymous'}
+                    {request.submittedAt ? ` · ${new Date(request.submittedAt).toLocaleString()}` : ''}
+                  </p>
+                </div>
+                <div className="flex shrink-0 gap-2">
+                  {request.status !== 'added' && (
+                    <button
+                      type="button"
+                      onClick={() => openAddModal(request)}
+                      className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-purple-600 px-4 text-xs font-bold text-white transition hover:bg-purple-500"
+                    >
+                      <span className="material-symbols-outlined text-[17px]">playlist_add</span>
+                      Add to catalog
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => deleteSiteRequest(request.id).catch((error) => console.error('Unable to remove site request:', error))}
+                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-white/10 px-3 text-xs font-semibold text-zinc-300 transition hover:border-rose-400/30 hover:bg-rose-500/10 hover:text-rose-200"
+                    aria-label={`Dismiss ${request.siteName} request`}
+                    title="Dismiss request"
+                  >
+                    <span className="material-symbols-outlined text-[17px]">close</span>
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            </article>
+          ))}
+        </section>
+      )}
 
       {/* Content Management Table */}
       {activeTab === 'content' && (
@@ -413,7 +544,7 @@ export default function AdminDashboard() {
           <div className="w-full max-w-lg bg-[#181622] border border-white/15 rounded-3xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <h3 className="text-lg font-bold text-white">
-                {editingItem ? 'Edit Content Item' : 'Add New Content Item'}
+                {editingItem ? 'Edit Content Item' : requestBeingAdded ? 'Add Requested Site' : 'Add New Content Item'}
               </h3>
               <button onClick={() => setShowModal(false)} className="text-zinc-400 hover:text-white">
                 <span className="material-symbols-outlined">close</span>
@@ -525,6 +656,8 @@ export default function AdminDashboard() {
                 />
               </div>
 
+              {contentSaveError && <p role="alert" className="text-xs text-rose-300">{contentSaveError}</p>}
+
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"
@@ -535,9 +668,10 @@ export default function AdminDashboard() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs py-3 rounded-xl"
+                  disabled={savingContent}
+                  className="flex-1 bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs py-3 rounded-xl disabled:cursor-wait disabled:opacity-60"
                 >
-                  Save Item
+                  {savingContent ? 'Saving…' : requestBeingAdded ? 'Add Site to Catalog' : 'Save Item'}
                 </button>
               </div>
             </form>

@@ -88,6 +88,62 @@ export async function submitComment(siteId, comment, useful, author) {
   return response.json();
 }
 
+export async function fetchSiteRequests() {
+  const response = await fetch(`${API_BASE_URL}/api/request-sites`, {
+    method: 'GET',
+    credentials: 'include'
+  });
+  return response.json();
+}
+
+export async function fetchCatalogItems() {
+  const response = await fetch(`${API_BASE_URL}/api/catalog-items`, {
+    method: 'GET',
+    credentials: 'include'
+  });
+  return response.json();
+}
+
+export async function submitCatalogItem(item) {
+  const response = await fetch(`${API_BASE_URL}/api/catalog-items`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(item)
+  });
+  return response.json();
+}
+
+export async function submitSiteRequest(request) {
+  const response = await fetch(`${API_BASE_URL}/api/request-sites`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request)
+  });
+  return response.json();
+}
+
+export async function updateSiteRequest(id, updates) {
+  const response = await fetch(`${API_BASE_URL}/api/request-sites`, {
+    method: 'PATCH',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id, ...updates })
+  });
+  return response.json();
+}
+
+export async function deleteSiteRequest(id) {
+  const response = await fetch(`${API_BASE_URL}/api/request-sites`, {
+    method: 'DELETE',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id })
+  });
+  return response.json();
+}
+
 export async function fetchPwaStatus() {
   const response = await fetch(`${API_BASE_URL}/api/pwa/status`, {
     method: 'GET',

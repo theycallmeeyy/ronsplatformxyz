@@ -10,6 +10,12 @@ import { OAuth2Client } from 'google-auth-library';
 import {
   getUserById,
   getUsers,
+  getSharedCatalogItems,
+  createSharedCatalogItem,
+  getSiteRequests,
+  createSiteRequest,
+  updateSiteRequest,
+  deleteSiteRequest,
   upsertGoogleUser,
   getMeta,
   incrementVisitorOffset,
@@ -33,6 +39,9 @@ const JWT_SECRET = process.env.JWT_SECRET || 'change-this-secret';
 if (!GOOGLE_CLIENT_ID) {
   console.warn('Warning: GOOGLE_CLIENT_ID is not configured. Google auth will not work until set.');
 }
+if (!process.env.ADMIN_EMAIL?.trim()) {
+  console.warn('Warning: ADMIN_EMAIL is not configured. Admin dashboard access is disabled.');
+}
 
 const googleClient = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null;
 const app = express();
@@ -46,8 +55,14 @@ app.use(
   })
 );
 
-function createSessionToken(userId) {
-  return jwt.sign({ sub: userId }, JWT_SECRET, {
+function createSessionToken(user) {
+  return jwt.sign({
+    sub: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role || 'user',
+    adminAuthorized: user.admin_authorized === true
+  }, JWT_SECRET, {
     expiresIn: '7d'
   });
 }
@@ -91,25 +106,25 @@ function getActiveUserCount() {
   return new Set(Array.from(activeSessions.values()).map((session) => session.userId)).size;
 }
 
-function setSessionCookie(res, userId) {
+function setSessionCookie(res, user) {
   const expiresAt = new Date(Date.now() + SESSION_DURATION_MS).toISOString();
-  const token = jwt.sign({ sub: userId }, JWT_SECRET, {
-    expiresIn: '7d'
-  });
+  const token = createSessionToken(user);
   res.cookie('ronkws_session', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     maxAge: SESSION_DURATION_MS
   });
-  registerActiveSession(token, userId, expiresAt);
+  registerActiveSession(token, user.id, expiresAt);
   return { token, expiresAt };
 }
 
 function sanitizeForClient(user) {
   if (!user) return null;
   const { id, google_uid, name, email, profile_photo, provider, role, created_at, updated_at, last_login } = user;
-  return { id, google_uid, name, email, profile_photo, provider, role, created_at, updated_at, last_login };
+  const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+  const verifiedAdmin = user.admin_authorized === true && adminEmail && email?.toLowerCase() === adminEmail;
+  return { id, google_uid, name, email, profile_photo, provider, role: verifiedAdmin ? 'admin' : 'user', created_at, updated_at, last_login };
 }
 
 async function getSessionUser(req) {
@@ -122,6 +137,156 @@ async function getSessionUser(req) {
     return null;
   }
 }
+
+function isAdminUser(user) {
+  const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+  return Boolean(
+    user?.admin_authorized === true &&
+    user?.role === 'admin' &&
+    adminEmail &&
+    user.email?.toLowerCase() === adminEmail
+  );
+}
+
+function normalizeSiteRequest(body = {}) {
+  const siteName = typeof body.siteName === 'string' ? body.siteName.trim().slice(0, 80) : '';
+  const whyAdd = typeof body.whyAdd === 'string' ? body.whyAdd.trim().slice(0, 1000) : '';
+  let parsedUrl;
+  try {
+    parsedUrl = new URL(typeof body.siteUrl === 'string' ? body.siteUrl.trim() : '');
+  } catch {
+    return { error: 'Enter a valid site URL.' };
+  }
+  if (!['http:', 'https:'].includes(parsedUrl.protocol) || !siteName) {
+    return { error: 'A site name and valid HTTP or HTTPS URL are required.' };
+  }
+  if (!Array.isArray(body.regionsSections) || body.regionsSections.length === 0 || body.regionsSections.length > 10) {
+    return { error: 'Choose between 1 and 10 region and section pairs.' };
+  }
+  const regionsSections = body.regionsSections
+    .filter((target) => typeof target?.region === 'string' && typeof target?.section === 'string')
+    .map((target) => ({ region: target.region.trim().slice(0, 80), section: target.section.trim().slice(0, 80) }))
+    .filter((target) => target.region && target.section);
+  if (!regionsSections.length) {
+    return { error: 'Each request needs a valid region and section.' };
+  }
+  return { value: { siteName, siteUrl: parsedUrl.href, whyAdd, regionsSections } };
+}
+
+function normalizeCatalogItem(body = {}) {
+  const title = typeof body.title === 'string' ? body.title.trim().slice(0, 120) : '';
+  const category = typeof body.category === 'string' ? body.category : '';
+  const categories = ['Movies', 'TV Shows', 'Anime', 'Manga', 'Live TV', 'Sports', 'Apps'];
+  let siteUrl;
+  try {
+    siteUrl = new URL(typeof body.url === 'string' ? body.url.trim() : '');
+  } catch {
+    return { error: 'Enter a valid site URL.' };
+  }
+  if (!title || !categories.includes(category) || !['http:', 'https:'].includes(siteUrl.protocol)) {
+    return { error: 'A title, supported category, and valid HTTP or HTTPS URL are required.' };
+  }
+  return {
+    value: {
+      id: `item-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      title,
+      category,
+      type: typeof body.type === 'string' ? body.type.slice(0, 40) : 'movie',
+      url: siteUrl.href,
+      embedUrl: typeof body.embedUrl === 'string' ? body.embedUrl.trim().slice(0, 2000) : '',
+      bannerUrl: typeof body.bannerUrl === 'string' ? body.bannerUrl.trim().slice(0, 2000) : '',
+      description: typeof body.description === 'string' ? body.description.trim().slice(0, 2000) : '',
+      rating: Number.isFinite(Number(body.rating)) ? Math.max(0, Math.min(5, Number(body.rating))) : 4.5,
+      year: typeof body.year === 'string' ? body.year.slice(0, 30) : new Date().getFullYear().toString(),
+      views: '0',
+      isTrending: false,
+      isRecommended: false,
+      ...(typeof body.sourceRequestId === 'string' ? { sourceRequestId: body.sourceRequestId.slice(0, 100) } : {})
+    }
+  };
+}
+
+app.get('/api/catalog-items', async (req, res) => {
+  try {
+    return res.json({ success: true, items: await getSharedCatalogItems() });
+  } catch (error) {
+    console.error('Failed to load shared catalog items:', error);
+    return res.status(500).json({ success: false, error: 'Unable to load catalog items.' });
+  }
+});
+
+app.post('/api/catalog-items', async (req, res) => {
+  try {
+    const user = await getSessionUser(req);
+    if (!isAdminUser(user)) return res.status(403).json({ success: false, error: 'Admin access required.' });
+    const normalized = normalizeCatalogItem(req.body);
+    if (normalized.error) return res.status(400).json({ success: false, error: normalized.error });
+    const item = await createSharedCatalogItem(normalized.value);
+    return res.status(201).json({ success: true, item });
+  } catch (error) {
+    console.error('Failed to add shared catalog item:', error);
+    return res.status(500).json({ success: false, error: 'Unable to add catalog item.' });
+  }
+});
+
+app.get('/api/request-sites', async (req, res) => {
+  try {
+    const user = await getSessionUser(req);
+    if (!isAdminUser(user)) return res.status(403).json({ success: false, error: 'Admin access required.' });
+    return res.json({ success: true, requests: await getSiteRequests() });
+  } catch (error) {
+    console.error('Failed to load site requests:', error);
+    return res.status(500).json({ success: false, error: 'Unable to load site requests.' });
+  }
+});
+
+app.post('/api/request-sites', async (req, res) => {
+  try {
+    const normalized = normalizeSiteRequest(req.body);
+    if (normalized.error) return res.status(400).json({ success: false, error: normalized.error });
+    const user = await getSessionUser(req);
+    const request = await createSiteRequest({
+      ...normalized.value,
+      createdBy: user?.email || 'anonymous'
+    });
+    return res.status(201).json({ success: true, request });
+  } catch (error) {
+    console.error('Failed to submit site request:', error);
+    return res.status(500).json({ success: false, error: 'Unable to submit site request.' });
+  }
+});
+
+app.patch('/api/request-sites', async (req, res) => {
+  try {
+    const user = await getSessionUser(req);
+    if (!isAdminUser(user)) return res.status(403).json({ success: false, error: 'Admin access required.' });
+    const id = typeof req.body?.id === 'string' ? req.body.id : '';
+    if (!id || req.body?.status !== 'added') {
+      return res.status(400).json({ success: false, error: 'A request ID and added status are required.' });
+    }
+    const request = await updateSiteRequest(id, { status: 'added', reviewedAt: new Date().toISOString() });
+    if (!request) return res.status(404).json({ success: false, error: 'Site request not found.' });
+    return res.json({ success: true, request });
+  } catch (error) {
+    console.error('Failed to update site request:', error);
+    return res.status(500).json({ success: false, error: 'Unable to update site request.' });
+  }
+});
+
+app.delete('/api/request-sites', async (req, res) => {
+  try {
+    const user = await getSessionUser(req);
+    if (!isAdminUser(user)) return res.status(403).json({ success: false, error: 'Admin access required.' });
+    const id = typeof req.body?.id === 'string' ? req.body.id : '';
+    if (!id) return res.status(400).json({ success: false, error: 'A request ID is required.' });
+    const deleted = await deleteSiteRequest(id);
+    if (!deleted) return res.status(404).json({ success: false, error: 'Site request not found.' });
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('Failed to delete site request:', error);
+    return res.status(500).json({ success: false, error: 'Unable to delete site request.' });
+  }
+});
 
 app.post('/api/auth/google', async (req, res) => {
   if (!googleClient) {
@@ -144,8 +309,11 @@ app.post('/api/auth/google', async (req, res) => {
     const email = payload.email || '';
     const name = payload.name || 'Google User';
     const profilePhoto = payload.picture || '';
+    const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+    const emailVerified = payload.email_verified === true || payload.email_verified === 'true';
+    const role = adminEmail && emailVerified && email.toLowerCase() === adminEmail ? 'admin' : 'user';
 
-    const upsertResult = await upsertGoogleUser({ googleUid, email, name, profilePhoto });
+    const upsertResult = await upsertGoogleUser({ googleUid, email, name, profilePhoto, role });
     const user = upsertResult?.user || null;
     const wasCreated = Boolean(upsertResult?.created);
 
@@ -158,7 +326,7 @@ app.post('/api/auth/google', async (req, res) => {
       }
     }
 
-    const { expiresAt } = setSessionCookie(res, user.id);
+    const { expiresAt } = setSessionCookie(res, user);
 
     return res.json({ success: true, user: sanitizeForClient(user), expiresAt });
   } catch (error) {
@@ -448,7 +616,7 @@ app.get('/api/auth/me', async (req, res) => {
       return res.status(401).json({ success: false, error: 'Session user not found' });
     }
     touchActiveSession(token);
-    const { expiresAt } = setSessionCookie(res, user.id);
+    const { expiresAt } = setSessionCookie(res, user);
     return res.json({ success: true, user: sanitizeForClient(user), expiresAt });
   } catch (error) {
     clearActiveSession(token);
@@ -469,7 +637,7 @@ app.post('/api/auth/refresh', async (req, res) => {
       return res.status(401).json({ success: false, error: 'Session user not found' });
     }
 
-    const { expiresAt } = setSessionCookie(res, user.id);
+    const { expiresAt } = setSessionCookie(res, user);
     return res.json({ success: true, user: sanitizeForClient(user), expiresAt });
   } catch (error) {
     return res.status(401).json({ success: false, error: 'Session refresh failed' });

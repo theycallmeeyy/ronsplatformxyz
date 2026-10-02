@@ -16,7 +16,7 @@ const SECTIONS = [
 const FIELD_CLASS = 'w-full rounded-lg border border-white/12 bg-[#0b0a10] px-3.5 py-3 text-sm text-white placeholder:text-zinc-600 outline-none transition focus:border-purple-400/70 focus:ring-2 focus:ring-purple-500/15';
 
 export default function RequestSite() {
-  const { setCurrentRoute, user } = useAuth();
+  const { setCurrentRoute } = useAuth();
   const { addSiteRequest } = useContent();
   const [siteUrl, setSiteUrl] = useState('');
   const [siteName, setSiteName] = useState('');
@@ -24,6 +24,7 @@ export default function RequestSite() {
   const [targets, setTargets] = useState([{ region: '', section: '' }]);
   const [error, setError] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const updateTarget = (index, field, value) => {
     setTargets((current) => current.map((target, targetIndex) => (
@@ -31,10 +32,12 @@ export default function RequestSite() {
     )));
   };
 
-  const addTarget = () => setTargets((current) => [...current, { region: '', section: '' }]);
+  const addTarget = () => setTargets((current) => (
+    current.length < 10 ? [...current, { region: '', section: '' }] : current
+  ));
   const removeTarget = (index) => setTargets((current) => current.filter((_, targetIndex) => targetIndex !== index));
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     setError('');
     setSubmitted(false);
@@ -54,19 +57,24 @@ export default function RequestSite() {
       return;
     }
 
-    addSiteRequest({
-      siteUrl: normalizedUrl.href,
-      siteName: siteName.trim(),
-      whyAdd: whyAdd.trim(),
-      regionsSections: validTargets,
-      createdBy: user?.email || 'anonymous',
-      submittedAt: new Date().toISOString()
-    });
-    setSiteUrl('');
-    setSiteName('');
-    setWhyAdd('');
-    setTargets([{ region: '', section: '' }]);
-    setSubmitted(true);
+    setIsSubmitting(true);
+    try {
+      await addSiteRequest({
+        siteUrl: normalizedUrl.href,
+        siteName: siteName.trim(),
+        whyAdd: whyAdd.trim(),
+        regionsSections: validTargets
+      });
+      setSiteUrl('');
+      setSiteName('');
+      setWhyAdd('');
+      setTargets([{ region: '', section: '' }]);
+      setSubmitted(true);
+    } catch (submitError) {
+      setError(submitError.message || 'Unable to submit your request. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -163,9 +171,10 @@ export default function RequestSite() {
                 <button
                   type="button"
                   onClick={addTarget}
-                  className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-white/10 px-3 text-xs font-medium text-zinc-300 transition hover:border-purple-400/50 hover:bg-purple-500/10 hover:text-white"
+                  disabled={targets.length >= 10}
+                  className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-white/10 px-3 text-xs font-medium text-zinc-300 transition hover:border-purple-400/50 hover:bg-purple-500/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  <Plus size={15} /> Add another region/section
+                  <Plus size={15} /> {targets.length >= 10 ? 'Maximum of 10 pairs' : 'Add another region/section'}
                 </button>
               </fieldset>
 
@@ -186,9 +195,11 @@ export default function RequestSite() {
 
               <button
                 type="submit"
-                className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-purple-600 px-4 text-sm font-semibold text-white transition hover:bg-purple-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-300"
+                disabled={isSubmitting}
+                aria-busy={isSubmitting}
+                className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-purple-600 px-4 text-sm font-semibold text-white transition hover:bg-purple-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-300 disabled:cursor-wait disabled:opacity-60"
               >
-                <Send size={16} /> Submit request
+                <Send size={16} /> {isSubmitting ? 'Submitting…' : 'Submit request'}
               </button>
             </form>
           </section>

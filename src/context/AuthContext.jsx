@@ -18,33 +18,20 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const { showToast } = useToast();
 
-  // Load registered users from localStorage or default
+  // Load locally registered users; administrator access is verified by the server session.
   const [users, setUsers] = useState(() => {
     const saved = localStorage.getItem('ronkws_users');
-    const defaultAdmin = INITIAL_USERS.find((u) => u.id === 'usr-002');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        const normalized = parsed.map((u) => {
-          const baseUser = {
-            ...u,
-            blocked: u.blocked ?? false
-          };
-          if (u.id === defaultAdmin.id || u.email.toLowerCase() === defaultAdmin.email) {
-            return { ...defaultAdmin, blocked: baseUser.blocked };
-          }
-          return baseUser;
-        });
+        const normalized = parsed
+          .filter((u) => u.id !== 'usr-002')
+          .map((u) => ({ ...u, blocked: u.blocked ?? false }));
 
-        const hasAdmin = normalized.some(
-          (u) => u.id === defaultAdmin.id || u.email.toLowerCase() === defaultAdmin.email
-        );
-        const nextUsers = hasAdmin ? normalized : [...normalized, { ...defaultAdmin }];
-
-        if (JSON.stringify(nextUsers) !== JSON.stringify(parsed)) {
-          localStorage.setItem('ronkws_users', JSON.stringify(nextUsers));
+        if (JSON.stringify(normalized) !== JSON.stringify(parsed)) {
+          localStorage.setItem('ronkws_users', JSON.stringify(normalized));
         }
-        return nextUsers;
+        return normalized;
       } catch (e) {
         console.error(e);
       }
@@ -117,7 +104,7 @@ export function AuthProvider({ children }) {
       try {
         const refreshResult = await refreshSession();
         if (refreshResult?.success && refreshResult.user) {
-          setUser(refreshResult.user);
+          setUser({ ...refreshResult.user, authSource: 'server' });
           if (refreshResult.expiresAt) {
             scheduleRefresh(refreshResult.expiresAt);
           }
@@ -140,7 +127,7 @@ export function AuthProvider({ children }) {
       avatar:
         existing?.avatar || fbUser.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(email)}`,
       provider: 'firebase',
-      role: existing?.role || 'user',
+      role: 'user',
       blocked: existing?.blocked || false,
       memberSince: existing?.memberSince || new Date().getFullYear().toString(),
       bio: existing?.bio || 'Firebase authenticated streamer'
@@ -203,7 +190,7 @@ export function AuthProvider({ children }) {
       try {
         const result = await fetchCurrentUser();
         if (result?.success && result.user) {
-          setUser(result.user);
+          setUser({ ...result.user, authSource: 'server' });
           setCurrentRoute('home');
           if (result.expiresAt) {
             scheduleRefresh(result.expiresAt);
@@ -213,19 +200,6 @@ export function AuthProvider({ children }) {
         }
       } catch (error) {
         console.warn('Unable to restore backend auth session:', error);
-      }
-
-      const rememberedEmail = localStorage.getItem('ronkws_remembered_user');
-      if (rememberedEmail) {
-        const localUser = users.find(
-          (u) => u.email.toLowerCase() === rememberedEmail.toLowerCase()
-        );
-        if (localUser) {
-          setUser(localUser);
-          setCurrentRoute('home');
-          setAuthLoaded(true);
-          return;
-        }
       }
 
       setAuthLoaded(true);
@@ -458,7 +432,8 @@ export function AuthProvider({ children }) {
       ...serverUser,
       blocked: serverUser.blocked ?? false,
       avatar: serverUser.profile_photo || serverUser.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(serverUser.name || serverUser.email)}`,
-      role: serverUser.role || 'user'
+      role: serverUser.role || 'user',
+      authSource: 'server'
     };
 
     if (normalizedUser.blocked) {
@@ -574,7 +549,8 @@ export function AuthProvider({ children }) {
   // Wrapper for setCurrentRoute to validate route and prevent blank screens
   const validRoutes = ['home', 'trending', 'favorites', 'search', 'profile', 'admin', 'dmca', 'request'];
   const setCurrentRouteWithValidation = useCallback((route) => {
-    if ((route === 'admin' && user?.role !== 'admin') || (route === 'profile' && !user)) {
+    const isVerifiedAdmin = user?.authSource === 'server' && user?.role === 'admin';
+    if ((route === 'admin' && !isVerifiedAdmin) || (route === 'profile' && !user)) {
       console.warn(`Route ${route} requires an authenticated account, defaulting to home`);
       setCurrentRoute('home');
       return;
@@ -602,7 +578,7 @@ export function AuthProvider({ children }) {
         authLoaded,
         ageVerified,
         isAuthenticated: !!user,
-        isAdmin: user?.role === 'admin',
+        isAdmin: user?.authSource === 'server' && user?.role === 'admin',
         playIntroAnimation,
         currentRoute,
         setCurrentRoute: setCurrentRouteWithValidation,

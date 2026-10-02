@@ -1,9 +1,20 @@
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { TBCPL_CONTENT } from '../data/tbcplContent';
 import { useToast } from './ToastContext';
 import { useAuth } from './AuthContext';
 import { assessUrlSafety, getProviderStatus as getLocalProviderStatus } from '../utils/linkSafety';
-import { checkProviderStatus as fetchProviderStatus, clearUserHistory, fetchUserData, saveUserData } from '../utils/api';
+import {
+  checkProviderStatus as fetchProviderStatus,
+  clearUserHistory,
+  fetchCatalogItems,
+  deleteSiteRequest as removeSiteRequest,
+  fetchSiteRequests,
+  fetchUserData,
+  saveUserData,
+  submitCatalogItem,
+  submitSiteRequest,
+  updateSiteRequest as saveSiteRequest
+} from '../utils/api';
 
 const ContentContext = createContext(null);
 const CATALOG_VERSION = 2;
@@ -82,13 +93,13 @@ export function ContentProvider({ children }) {
     }
     return {};
   });
-  const [siteRequests, setSiteRequests] = useState(() => {
-    const saved = localStorage.getItem('ronkws_site_requests');
-    if (saved) {
-      try { return JSON.parse(saved); } catch (error) { console.error(error); }
-    }
-    return [];
-  });
+  const [siteRequests, setSiteRequests] = useState([]);
+  const refreshSiteRequests = useCallback(async () => {
+    if (!isAdmin) throw new Error('Admin access required.');
+    const result = await fetchSiteRequests();
+    if (!result?.success) throw new Error(result?.error || 'Unable to load site requests.');
+    setSiteRequests(Array.isArray(result.requests) ? result.requests : []);
+  }, [isAdmin]);
 
   // Currently active filter & search states
   const [searchQuery, setSearchQuery] = useState('');
@@ -107,6 +118,24 @@ export function ContentProvider({ children }) {
   }, [items]);
 
   useEffect(() => {
+    let cancelled = false;
+    fetchCatalogItems()
+      .then((result) => {
+        if (!result?.success) throw new Error(result?.error || 'Unable to load shared catalog items.');
+        if (cancelled || !Array.isArray(result.items) || !result.items.length) return;
+        setItems((current) => {
+          const sharedIds = new Set(result.items.map((item) => item.id));
+          return [...result.items, ...current.filter((item) => !sharedIds.has(item.id))];
+        });
+      })
+      .catch((error) => {
+        console.error('Unable to load shared catalog items:', error);
+      });
+
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
     localStorage.setItem('ronkws_favorites', JSON.stringify(favorites));
   }, [favorites]);
 
@@ -123,8 +152,21 @@ export function ContentProvider({ children }) {
   }, [providerHistory]);
 
   useEffect(() => {
-    localStorage.setItem('ronkws_site_requests', JSON.stringify(siteRequests));
-  }, [siteRequests]);
+    let cancelled = false;
+    if (!isAdmin) {
+      setSiteRequests([]);
+      return undefined;
+    }
+
+    refreshSiteRequests()
+      .catch((error) => {
+        if (cancelled) return;
+        console.error('Unable to load site requests:', error);
+        showToast(error.message || 'Unable to load site requests.', 'error');
+      });
+
+    return () => { cancelled = true; };
+  }, [isAdmin, refreshSiteRequests, showToast]);
 
   useEffect(() => {
     let cancelled = false;
@@ -346,18 +388,22 @@ export function ContentProvider({ children }) {
   };
 
   // Admin Actions: Add, Edit, Delete Content
-  const addContent = (newContent) => {
-    const item = {
+  const addContent = async (newContent) => {
+    if (!isAdmin) throw new Error('Only administrators can add catalog items.');
+    const result = await submitCatalogItem({
       ...newContent,
-      id: `item-${Date.now()}`,
-      views: '0',
       rating: parseFloat(newContent.rating) || 4.5,
       year: newContent.year || new Date().getFullYear().toString(),
       isTrending: false,
       isRecommended: false
-    };
+    });
+    if (!result?.success || !result.item) {
+      throw new Error(result?.error || 'Unable to add catalog item.');
+    }
+    const item = result.item;
     setItems((prev) => [item, ...prev]);
     showToast(`Added "${item.title}" to catalog!`, 'success');
+    return item;
   };
 
   const updateContent = (id, updatedFields) => {
@@ -407,16 +453,42 @@ export function ContentProvider({ children }) {
     showToast(`Deleted "${item?.title || 'item'}" from catalog`, 'info');
   };
 
-  const addSiteRequest = (request) => {
-    const entry = {
-      ...request,
-      id: `request-${Date.now()}`,
-      status: 'pending',
-      submittedAt: request.submittedAt || new Date().toISOString()
-    };
-    setSiteRequests((prev) => [entry, ...prev]);
+  const addSiteRequest = async (request) => {
+    const result = await submitSiteRequest(request);
+    if (!result?.success || !result.request) {
+      throw new Error(result?.error || 'Unable to submit site request.');
+    }
+    if (isAdmin) setSiteRequests((prev) => [result.request, ...prev]);
     showToast('Your site request was submitted for review.', 'success');
-    return entry;
+    return result.request;
+  };
+
+  const markSiteRequestAdded = async (requestId) => {
+    if (!isAdmin) throw new Error('Admin access required.');
+    try {
+      const result = await saveSiteRequest(requestId, { status: 'added' });
+      if (!result?.success || !result.request) {
+        throw new Error(result?.error || 'Unable to update site request.');
+      }
+      setSiteRequests((prev) => prev.map((request) => request.id === requestId ? result.request : request));
+      showToast('Request marked as added.', 'success');
+    } catch (error) {
+      showToast(error.message || 'Unable to update site request.', 'error');
+      throw error;
+    }
+  };
+
+  const deleteSiteRequest = async (requestId) => {
+    if (!isAdmin) throw new Error('Admin access required.');
+    try {
+      const result = await removeSiteRequest(requestId);
+      if (!result?.success) throw new Error(result?.error || 'Unable to remove site request.');
+      setSiteRequests((prev) => prev.filter((request) => request.id !== requestId));
+      showToast('Site request removed.', 'info');
+    } catch (error) {
+      showToast(error.message || 'Unable to remove site request.', 'error');
+      throw error;
+    }
   };
 
   // Filtered & Sorted items memoized
@@ -454,6 +526,9 @@ export function ContentProvider({ children }) {
       value={{
         items,
         siteRequests,
+        refreshSiteRequests,
+        markSiteRequestAdded,
+        deleteSiteRequest,
         filteredItems,
         favoriteItems,
         favorites,

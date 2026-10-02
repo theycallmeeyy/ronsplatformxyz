@@ -31,8 +31,25 @@ function MainApp() {
   if (!authLoaded) {
     return (
       <div className="min-h-screen bg-[#14121d] text-white flex items-center justify-center">
-        <div className="text-center p-6 rounded-3xl bg-white/5 border border-white/10 shadow-[0_12px_40px_rgba(124,58,237,0.2)]">
-          <div className="h-12 w-12 rounded-full border-4 border-purple-500 border-t-transparent animate-spin mx-auto mb-4" />
+        <div
+          className="session-loader text-center p-6 rounded-3xl bg-white/5 border border-white/10 shadow-[0_12px_40px_rgba(124,58,237,0.2)]"
+          role="status"
+          aria-live="polite"
+          aria-busy="true"
+        >
+          <img
+            src="/logo/ronkws-glass-mark.svg"
+            alt=""
+            className="session-loader__logo mx-auto mb-4 h-14 w-14 object-contain"
+          />
+          <div
+            className="session-loader__track mx-auto mb-4"
+            role="progressbar"
+            aria-label="Restoring your session"
+            aria-valuetext="Loading"
+          >
+            <span className="session-loader__bar" />
+          </div>
           <p className="text-sm text-zinc-300">Restoring your session...</p>
         </div>
       </div>
