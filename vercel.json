@@ -6,6 +6,10 @@
       "handle": "filesystem"
     },
     {
+      "src": "/api/health",
+      "dest": "/api/config?health=1"
+    },
+    {
       "src": "/.*",
       "dest": "/index.html"
     }
